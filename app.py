@@ -20,7 +20,7 @@ from rubric import (
 
 MODEL = "claude-opus-5"
 MAX_CALLS_PER_SESSION = 20
-LIMITS = {"sql": 4000, "result": 3000, "insight": 3000}
+LIMITS = {"question": 300, "sql": 4000, "result": 3000, "insight": 3000}
 
 st.set_page_config(page_title="Olist 인사이트 셀프체크", page_icon="🔎", layout="centered")
 
@@ -87,26 +87,36 @@ with st.sidebar:
 # ── 입력 ────────────────────────────────────────────────────────
 st.title("🔎 Olist 인사이트 셀프체크")
 st.caption(
-    "쿼리 · 실행 결과 · 인사이트를 넣으면 항목별로 몇 단계인지, "
+    "질문 · 쿼리 · 실행 결과 · 인사이트를 넣으면 항목별로 몇 단계인지, "
     "한 단계 올리려면 뭘 해야 하는지 알려줍니다."
 )
 
+question = st.text_input(
+    "1. 무엇을 알아보려 했나요? (한 문장)",
+    placeholder="예: 배송이 예상보다 늦은 주문은 리뷰 점수가 실제로 더 낮은가?",
+    max_chars=LIMITS["question"],
+)
+st.caption("이 질문과 쿼리가 정말 같은 것을 묻는지가 배점이 가장 큰 항목(30점)입니다.")
+
 sql = st.text_area(
-    "1. 작성한 쿼리",
+    "2. 작성한 쿼리",
     height=200,
     placeholder="SELECT c.customer_state, AVG(...) \nFROM olist_raw.orders AS o\nJOIN ...",
 )
 result = st.text_area(
-    "2. 쿼리 실행 결과",
+    "3. 쿼리 실행 결과",
     height=140,
     placeholder="BigQuery 결과 표를 그대로 복사해서 붙여넣으세요. 행이 많으면 상위 10~20행이면 충분합니다.",
 )
 insight = st.text_area(
-    "3. 도출한 인사이트",
+    "4. 도출한 인사이트",
     height=200,
     placeholder=(
         "이 수치에서 무엇을 발견했는지, 왜 그렇다고 보는지, "
-        "그래서 무엇을 하자는 것인지 써주세요."
+        "그래서 무엇을 하자는 것인지 써주세요.\n\n"
+        "쿼리에서 판단이 필요했던 지점(취소 주문을 뺐다 / LEFT JOIN을 쓴 이유 / "
+        "주문 단위로 셌다 등)이 있었다면 왜 그렇게 했는지도 적어주세요. "
+        "쿼리 설계 판단 항목의 최고 단계 조건입니다."
     ),
 )
 
@@ -114,10 +124,13 @@ go = st.button("채점하기", type="primary", use_container_width=True)
 
 
 # ── 채점 ────────────────────────────────────────────────────────
-def build_user_message(sql: str, result: str, insight: str) -> str:
+def build_user_message(question: str, sql: str, result: str, insight: str) -> str:
     return (
-        "아래 제출물을 루브릭에 따라 채점해줘.\n\n"
+        "아래 제출물을 루브릭에 따라 채점해줘.\n"
+        "먼저 <query> 가 실제로 무엇을 세는지 한 문장으로 번역하고, "
+        "그걸 <question> 과 나란히 비교한 뒤에 점수를 매겨라.\n\n"
         "<submission>\n"
+        f"<question>\n{question.strip()}\n</question>\n\n"
         f"<query>\n{sql.strip()}\n</query>\n\n"
         f"<query_result>\n{result.strip()}\n</query_result>\n\n"
         f"<insight>\n{insight.strip()}\n</insight>\n"
@@ -125,13 +138,15 @@ def build_user_message(sql: str, result: str, insight: str) -> str:
     )
 
 
-def grade(sql: str, result: str, insight: str) -> dict:
+def grade(question: str, sql: str, result: str, insight: str) -> dict:
     client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
     resp = client.messages.create(
         model=MODEL,
         max_tokens=8000,
         system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": build_user_message(sql, result, insight)}],
+        messages=[
+            {"role": "user", "content": build_user_message(question, sql, result, insight)}
+        ],
         output_config={"format": {"type": "json_schema", "schema": GRADE_SCHEMA}},
     )
     if resp.stop_reason == "refusal":
@@ -149,13 +164,20 @@ def total_of(data: dict) -> int:
 
 if go:
     problems = []
+    if not question.strip():
+        problems.append("알아보려던 질문을 한 문장으로 적어주세요. 배점이 가장 큰 항목의 기준입니다.")
     if not sql.strip():
         problems.append("쿼리를 입력해주세요.")
     if not insight.strip():
         problems.append("인사이트를 입력해주세요.")
     if not result.strip():
-        problems.append("쿼리 실행 결과를 붙여넣어야 근거 정합성을 볼 수 있습니다.")
-    for key, field in (("sql", sql), ("result", result), ("insight", insight)):
+        problems.append("쿼리 실행 결과를 붙여넣어야 근거 사슬을 볼 수 있습니다.")
+    for key, field in (
+        ("question", question),
+        ("sql", sql),
+        ("result", result),
+        ("insight", insight),
+    ):
         if len(field) > LIMITS[key]:
             problems.append(f"{key} 가 너무 깁니다 ({len(field)}자 / 최대 {LIMITS[key]}자).")
     if st.session_state.calls >= MAX_CALLS_PER_SESSION:
@@ -167,7 +189,7 @@ if go:
     else:
         try:
             with st.spinner("채점 중입니다. 20~40초 걸립니다..."):
-                data = grade(sql, result, insight)
+                data = grade(question, sql, result, insight)
                 data["_total"] = total_of(data)
         except anthropic.RateLimitError:
             st.error("요청이 몰렸습니다. 30초 뒤에 다시 시도해주세요.")
@@ -219,7 +241,9 @@ if data:
                 st.markdown(f"> {d['evidence']}")
         st.write("")
 
-    st.subheader("쿼리 점검")
+    st.subheader("질문과 쿼리가 같은 것을 묻고 있나요?")
+    st.markdown("**이 쿼리가 실제로 세고 있는 것**")
+    st.code(data["query_translation"], language="text", wrap_lines=True)
     st.info(data["query_check"])
 
     st.subheader("잘한 점")
