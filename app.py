@@ -18,7 +18,24 @@ from rubric import (
     TOTAL_MAX,
 )
 
+# ── 비용 손잡이 ────────────────────────────────────────────────
+# 모델을 바꾸면 PRICES 의 키만 맞으면 비용 표시도 따라간다.
 MODEL = "claude-opus-5"
+
+# 사고 깊이. 채점 품질이 곧 과제 품질이라 기본은 high.
+# 예산이 빠듯하면 모델을 내리기 전에 여기부터 medium 으로 내려보고,
+# 같은 제출물을 2~3번 돌려 점수가 흔들리는지 확인할 것.
+EFFORT = "high"
+
+# $/1M 토큰 — (입력, 캐시쓰기, 캐시읽기, 출력)
+PRICES = {
+    "claude-opus-5": (5.0, 6.25, 0.5, 25.0),
+    "claude-opus-4-8": (5.0, 6.25, 0.5, 25.0),  # Opus 5와 동일가 — 바꿔도 절약 안 됨
+    "claude-sonnet-5": (2.0, 2.5, 0.2, 10.0),  # 2026-08-31 까지 인트로가, 이후 3/15
+    "claude-haiku-4-5": (1.0, 1.25, 0.1, 5.0),
+}
+PRICE_IN, PRICE_CACHE_WRITE, PRICE_CACHE_READ, PRICE_OUT = PRICES[MODEL]
+
 MAX_CALLS_PER_SESSION = 20
 LIMITS = {"question": 300, "sql": 4000, "result": 3000, "insight": 3000}
 
@@ -28,6 +45,7 @@ st.set_page_config(page_title="Olist 인사이트 셀프체크", page_icon="🔎
 # ── 상태 ────────────────────────────────────────────────────────
 st.session_state.setdefault("unlocked", False)
 st.session_state.setdefault("calls", 0)
+st.session_state.setdefault("spent", 0.0)
 st.session_state.setdefault("history", [])
 
 
@@ -82,6 +100,12 @@ with st.sidebar:
         st.code(SCHEMA_BLOCK, language="text")
     st.divider()
     st.caption(f"이번 세션 채점 횟수: {st.session_state.calls} / {MAX_CALLS_PER_SESSION}")
+    if st.session_state.calls:
+        spent = st.session_state.spent
+        st.caption(
+            f"API 사용액: ${spent:.3f} (회당 평균 ${spent / st.session_state.calls:.3f})"
+        )
+    st.caption(f"모델: `{MODEL}` · effort `{EFFORT}`")
 
 
 # ── 입력 ────────────────────────────────────────────────────────
@@ -143,18 +167,37 @@ def grade(question: str, sql: str, result: str, insight: str) -> dict:
     resp = client.messages.create(
         model=MODEL,
         max_tokens=8000,
-        system=SYSTEM_PROMPT,
+        # 시스템 프롬프트는 매 호출 동일하므로 캐싱한다. 한 학회원이 연달아 고쳐 낼 때
+        # (5분 TTL 안에 재호출) 입력 비용이 크게 줄어든다.
+        system=[
+            {"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}
+        ],
         messages=[
             {"role": "user", "content": build_user_message(question, sql, result, insight)}
         ],
-        output_config={"format": {"type": "json_schema", "schema": GRADE_SCHEMA}},
+        output_config={
+            "format": {"type": "json_schema", "schema": GRADE_SCHEMA},
+            "effort": EFFORT,
+        },
     )
     if resp.stop_reason == "refusal":
         raise RuntimeError("채점기가 이 제출물에 대한 응답을 거절했습니다. 내용을 확인해주세요.")
     if resp.stop_reason == "max_tokens":
         raise RuntimeError("응답이 잘렸습니다. 제출물을 조금 줄여서 다시 시도해주세요.")
     text = next(b.text for b in resp.content if b.type == "text")
-    return json.loads(text)
+    data = json.loads(text)
+    data["_cost"] = call_cost(resp.usage)
+    return data
+
+
+def call_cost(u) -> float:
+    """이번 호출의 대략적인 비용($). 캐시 적중분은 싸게 계산된다."""
+    return (
+        getattr(u, "input_tokens", 0) * PRICE_IN
+        + getattr(u, "cache_creation_input_tokens", 0) * PRICE_CACHE_WRITE
+        + getattr(u, "cache_read_input_tokens", 0) * PRICE_CACHE_READ
+        + getattr(u, "output_tokens", 0) * PRICE_OUT
+    ) / 1e6
 
 
 def total_of(data: dict) -> int:
@@ -201,6 +244,7 @@ if go:
             st.error(f"채점 결과를 읽지 못했습니다: {e}")
         else:
             st.session_state.calls += 1
+            st.session_state.spent += data.get("_cost", 0.0)
             st.session_state.history.append(data["_total"])
             st.session_state.latest = data
 

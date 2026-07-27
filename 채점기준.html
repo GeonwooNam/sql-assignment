@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Olist 인사이트 과제 채점 기준</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 16mm 16mm; }
+
+  :root {
+    --ink:      #16202b;
+    --body:     #2f3d4a;
+    --muted:    #6a7885;
+    --line:     #dde4ea;
+    --accent:   #0d5c6e;
+    --accent-w: #e7f2f4;
+    --warn:     #9a4a1f;
+    --warn-w:   #fdf1e7;
+    --good:     #1c6340;
+    --good-w:   #e9f4ee;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    font-family: "Apple SD Gothic Neo", "AppleSDGothicNeo-Regular", "Noto Sans KR", sans-serif;
+    color: var(--body);
+    font-size: 10.2pt;
+    line-height: 1.62;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  code, .sql {
+    font-family: "SF Mono", "Menlo", monospace;
+    font-size: 8.9pt;
+    letter-spacing: 0;
+  }
+  code {
+    background: #f1f4f6;
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  /* ---------- 표지 ---------- */
+  .cover { padding-bottom: 6mm; border-bottom: 2.5px solid var(--accent); margin-bottom: 8mm; }
+  .eyebrow {
+    font-size: 8.6pt; letter-spacing: 0.16em; color: var(--accent);
+    font-weight: 700; text-transform: uppercase; margin-bottom: 3mm;
+  }
+  h1 { font-size: 22pt; color: var(--ink); margin: 0 0 3mm; letter-spacing: -0.035em; line-height: 1.25; }
+  .sub { font-size: 10.6pt; color: var(--muted); margin: 0; }
+
+  /* ---------- 섹션 ---------- */
+  h2 {
+    font-size: 13pt; color: var(--ink); margin: 9mm 0 3mm;
+    letter-spacing: -0.025em; display: flex; align-items: baseline; gap: 3mm;
+    border-bottom: 1px solid var(--line); padding-bottom: 2mm;
+  }
+  h2 .num {
+    font-size: 9pt; color: #fff; background: var(--accent);
+    width: 6.5mm; height: 6.5mm; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex: none; font-weight: 700; letter-spacing: 0;
+  }
+  h2 .pts {
+    margin-left: auto; font-size: 9.5pt; color: var(--accent);
+    font-weight: 700; letter-spacing: 0;
+  }
+  h3 { font-size: 10.6pt; color: var(--ink); margin: 6mm 0 2mm; letter-spacing: -0.02em; }
+
+  p { margin: 0 0 2.5mm; }
+  ul { margin: 0 0 3mm; padding-left: 5mm; }
+  li { margin-bottom: 1.4mm; }
+
+  /* ---------- 강조 박스 ---------- */
+  .callout {
+    background: var(--accent-w); border-left: 3px solid var(--accent);
+    padding: 3.5mm 4.5mm; margin: 0 0 4mm; border-radius: 0 3px 3px 0;
+  }
+  .callout.warn { background: var(--warn-w); border-left-color: var(--warn); }
+  .callout.good { background: var(--good-w); border-left-color: var(--good); }
+  .callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+  .callout strong { color: var(--ink); }
+
+  /* ---------- 표 ---------- */
+  table { width: 100%; border-collapse: collapse; margin: 0 0 4mm; font-size: 9.4pt; }
+  th {
+    background: #f3f6f8; color: var(--ink); font-weight: 700;
+    text-align: left; padding: 2.2mm 2.5mm; border-bottom: 1.5px solid var(--line);
+    font-size: 8.8pt; letter-spacing: 0.02em; white-space: nowrap;
+  }
+  td { padding: 2.2mm 2.5mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+
+  .lv {
+    display: inline-block; width: 5mm; height: 5mm; line-height: 5mm;
+    border-radius: 50%; background: var(--accent); color: #fff;
+    text-align: center; font-size: 8pt; font-weight: 700;
+  }
+  .lv.l1 { background: #b8c2cb; }
+  .lv.l2 { background: #7d95a5; }
+  .lv.l3 { background: #2d7f92; }
+  .lv.l4 { background: var(--accent); }
+  td.c { text-align: center; white-space: nowrap; }
+  td.pt { text-align: center; white-space: nowrap; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* ---------- 배점 요약 ---------- */
+  .weights { display: flex; gap: 2mm; margin: 0 0 4mm; }
+  .w {
+    flex: 1; background: #f7f9fa; border: 1px solid var(--line);
+    border-radius: 4px; padding: 3mm 2mm; text-align: center;
+  }
+  .w .n { font-size: 15pt; font-weight: 700; color: var(--accent); letter-spacing: -0.03em; }
+  .w .t { font-size: 8.1pt; color: var(--muted); line-height: 1.35; margin-top: 1mm; }
+
+  /* ---------- 코드 블록 ---------- */
+  pre.sql {
+    background: #f7f9fa; border: 1px solid var(--line); border-left: 3px solid #9fb3bd;
+    padding: 3mm 3.5mm; margin: 0 0 3mm; border-radius: 0 3px 3px 0;
+    white-space: pre-wrap; line-height: 1.5; color: var(--ink);
+  }
+
+  /* ---------- 예시 비교 ---------- */
+  .exhead {
+    font-size: 9pt; font-weight: 700; padding: 1.8mm 3mm; border-radius: 3px 3px 0 0;
+    letter-spacing: -0.01em;
+  }
+  .exhead.bad  { background: #f0d9cb; color: var(--warn); }
+  .exhead.ok   { background: #cfe5d9; color: var(--good); }
+  .exbody { border: 1px solid var(--line); border-top: none; padding: 3mm 3.5mm; margin-bottom: 4mm; border-radius: 0 0 3px 3px; }
+  .exbody p { margin-bottom: 2mm; }
+  .exbody .lbl { font-size: 8.4pt; color: var(--muted); font-weight: 700; letter-spacing: 0.04em; }
+
+  .scoreline {
+    font-size: 8.8pt; color: var(--muted); border-top: 1px dashed var(--line);
+    padding-top: 2mm; margin-top: 1mm; font-variant-numeric: tabular-nums;
+  }
+  .scoreline b { color: var(--ink); }
+
+  .footer {
+    margin-top: 9mm; padding-top: 3mm; border-top: 1px solid var(--line);
+    font-size: 8.2pt; color: var(--muted);
+  }
+
+  .pagebreak { page-break-before: always; }
+  h2, h3 { page-break-after: avoid; }
+  /* 표는 행 단위로 쪼개지게 둔다. 통째로 avoid 하면 페이지 하단이 크게 빈다. */
+  tr { page-break-inside: avoid; }
+  thead { display: table-header-group; }
+  .callout, pre.sql { page-break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="eyebrow">YBIGTA · SQL 3주차 과제</div>
+  <h1>Olist 데이터셋 인사이트 도출<br>채점 기준</h1>
+  <p class="sub">무엇을 보고 어떻게 점수를 매기는지 전부 공개합니다. 쓰기 전에 한 번, 내기 전에 한 번 읽어보세요.</p>
+</div>
+
+<div class="callout">
+  <p><strong>이 과제는 쿼리의 화려함을 보지 않습니다.</strong> 테이블 2개만 조인해도 최고 단계가 나올 수 있고,
+  5개 테이블에 윈도우 함수를 써도 1단계가 될 수 있습니다. 보는 것은 하나입니다 —
+  <strong>세운 질문에 답하기 위해 무엇을 고민했는가.</strong></p>
+</div>
+
+<h2><span class="num">0</span> 제출물과 배점</h2>
+
+<p>네 가지를 제출합니다. 앞의 세 개가 서로 어긋나면 마지막이 아무리 좋아도 분석이 성립하지 않습니다.</p>
+
+<table>
+  <tr><td style="width:32mm"><strong>① 질문</strong></td><td>무엇을 알아보려 했는지 한 문장. <em>배점이 가장 큰 항목의 기준이 되므로 반드시 적습니다.</em></td></tr>
+  <tr><td><strong>② 쿼리</strong></td><td>BigQuery에서 실제로 돌린 SQL</td></tr>
+  <tr><td><strong>③ 실행 결과</strong></td><td>결과 표를 그대로 복사. 행이 많으면 상위 10~20행</td></tr>
+  <tr><td><strong>④ 인사이트</strong></td><td>무엇을 발견했고, 왜 그렇게 보며, 그래서 무엇을 하자는 것인지</td></tr>
+</table>
+
+<div class="weights">
+  <div class="w"><div class="n">30</div><div class="t">근거 사슬<br>정합성</div></div>
+  <div class="w"><div class="n">25</div><div class="t">쿼리 설계<br>판단</div></div>
+  <div class="w"><div class="n">20</div><div class="t">분석의<br>깊이</div></div>
+  <div class="w"><div class="n">15</div><div class="t">비즈니스<br>해석</div></div>
+  <div class="w"><div class="n">10</div><div class="t">액션<br>제안</div></div>
+</div>
+
+<p><strong>60점 이상이면 제출 권장 수준</strong>입니다. 점수는 성적이 아니라
+&ldquo;이 정도면 내도 되겠다&rdquo;는 신호로만 쓰세요.</p>
+
+<h2><span class="num">1</span> 근거 사슬 정합성 <span class="pts">30점</span></h2>
+
+<p><strong>질문 → 쿼리 → 결과 → 주장</strong>이 한 줄로 이어지는지 봅니다.
+네 고리 중 하나라도 끊기면 나머지가 아무리 좋아도 분석이 성립하지 않기 때문에 배점이 가장 큽니다.</p>
+
+<table>
+  <tr><th style="width:9mm">단계</th><th style="width:14mm">점수</th><th>기준</th></tr>
+  <tr><td class="c"><span class="lv l1">1</span></td><td class="pt">0–8</td>
+      <td>사슬이 끊김. 질문이 없거나, 쿼리가 질문과 다른 것을 계산하거나, 주장이 결과에 없는 내용임</td></tr>
+  <tr><td class="c"><span class="lv l2">2</span></td><td class="pt">9–16</td>
+      <td>질문과 쿼리가 대체로 맞지만 <strong>범위가 어긋남</strong> (아래 표 참고)</td></tr>
+  <tr><td class="c"><span class="lv l3">3</span></td><td class="pt">17–24</td>
+      <td>질문·쿼리·결과·주장이 일치하고, 인용한 수치가 붙여넣은 결과에 실제로 있음</td></tr>
+  <tr><td class="c"><span class="lv l4">4</span></td><td class="pt">25–30</td>
+      <td>위에 더해 <strong>비교 기준선</strong>(전체 평균·다른 세그먼트·이전 기간)을 제시해
+          &ldquo;이 숫자가 큰지 작은지&rdquo;에 답함</td></tr>
+</table>
+
+<h3>2단계로 내려가는 전형적인 어긋남</h3>
+
+<table>
+  <tr><th style="width:46mm">이렇게 물어놓고</th><th>이렇게 세면 다른 걸 센 것</th></tr>
+  <tr><td>&ldquo;재구매 고객&rdquo;</td>
+      <td><code>customer_id</code> 로 셈. 이 컬럼은 <strong>주문마다 새로 생기므로</strong> 재구매가 잡히지 않습니다.
+          사람 단위는 <code>customer_unique_id</code></td></tr>
+  <tr><td>&ldquo;배송 지연&rdquo;</td>
+      <td><code>canceled</code>·<code>unavailable</code> 주문까지 포함. 배송된 적 없는 주문의 지연은 의미가 없습니다</td></tr>
+  <tr><td>&ldquo;주문당 평균&rdquo;</td>
+      <td><code>order_items</code> 단위로 셈. 한 주문에 상품이 3개면 그 주문이 3번 계산됩니다</td></tr>
+  <tr><td>&ldquo;카테고리별&rdquo;</td>
+      <td>INNER JOIN 때문에 상품 정보가 없는 주문이 <strong>조용히</strong> 빠짐. 분모가 달라집니다</td></tr>
+  <tr><td>&ldquo;전체 주문 중&rdquo;</td>
+      <td><code>order_items</code> 와 조인. 항목이 하나도 없는 주문 <strong>775건</strong>이 사라집니다</td></tr>
+</table>
+
+<h2><span class="num">2</span> 쿼리 설계 판단 <span class="pts">25점</span></h2>
+
+<p>기법의 개수가 아니라 <strong>선택의 흔적</strong>을 봅니다.
+JOIN을 더 붙인다고, 윈도우 함수를 쓴다고 점수가 오르지 않습니다.</p>
+
+<table>
+  <tr><th style="width:9mm">단계</th><th style="width:14mm">점수</th><th>기준</th></tr>
+  <tr><td class="c"><span class="lv l1">1</span></td><td class="pt">0–6</td>
+      <td>실행 불가하거나 스키마에 없는 컬럼 사용. 또는 질문에 답할 수 없는 구조</td></tr>
+  <tr><td class="c"><span class="lv l2">2</span></td><td class="pt">7–13</td>
+      <td>실행되고 답도 나오지만 기본값에 머묾. 아래 판단 지점이 하나도 다뤄지지 않음</td></tr>
+  <tr><td class="c"><span class="lv l3">3</span></td><td class="pt">14–19</td>
+      <td>아래 판단 지점 중 <strong>둘 이상</strong>을 의도적으로 처리함</td></tr>
+  <tr><td class="c"><span class="lv l4">4</span></td><td class="pt">20–25</td>
+      <td>위에 더해 <strong>왜 그렇게 선택했는지</strong> 인사이트나 주석에 밝힘.
+          다른 선택을 했다면 결과가 어떻게 달라지는지까지 쓰면 확실한 4단계</td></tr>
+</table>
+
+<h3>다섯 개의 판단 지점</h3>
+
+<table>
+  <tr><th style="width:30mm">지점</th><th>스스로에게 물어볼 것</th></tr>
+  <tr><td><strong>모집단 정의</strong></td>
+      <td><code>order_status</code> 를 어떻게 다룰 것인가. <code>delivered</code> 만 볼 것인가,
+          <code>canceled</code> 만 뺄 것인가. 내 질문이 묻는 &ldquo;주문&rdquo;은 어디까지인가</td></tr>
+  <tr><td><strong>JOIN 종류</strong></td>
+      <td>LEFT인가 INNER인가. 이건 문법 취향이 아니라 <strong>&ldquo;한쪽에 없는 행을 남길 것인가&rdquo;</strong>라는
+          질문입니다. 예: 리뷰를 안 쓴 주문도 분모에 넣을 것인가? 넣어야 하면 LEFT,
+          리뷰가 있는 주문만 보는 게 맞으면 INNER. 어느 쪽이든 <strong>의도한 것이어야</strong> 합니다</td></tr>
+  <tr><td><strong>집계 단위</strong></td>
+      <td>결과의 행 하나가 무엇인가 — 주문 1건? 주문상품 1건? 고객 1명?
+          <code>COUNT(DISTINCT order_id)</code> 와 <code>COUNT(*)</code> 는 다른 질문에 답합니다</td></tr>
+  <tr><td><strong>고객 식별자</strong></td>
+      <td><code>customer_id</code>(주문마다 새로 생김) 와 <code>customer_unique_id</code>(사람) 중
+          내 질문에 맞는 것은 무엇인가</td></tr>
+  <tr><td><strong>NULL 처리</strong></td>
+      <td>배송되지 않아 <code>order_delivered_customer_date</code> 가 비어 있는 주문을
+          어떻게 할 것인가. 평균에서 조용히 빠지게 둘 것인가, 명시적으로 뺄 것인가</td></tr>
+</table>
+
+<div class="callout good">
+  <p><strong>4단계로 가는 가장 쉬운 길:</strong> 인사이트 본문에 한 줄만 더 쓰면 됩니다. &mdash;
+  &ldquo;취소·미배송 주문은 배송 기간을 잴 수 없어 <code>delivered</code> 만 남겼습니다.
+  이걸 포함하면 표본이 약 3% 늘지만 지연일 계산이 불가능해집니다.&rdquo;</p>
+</div>
+
+<div class="pagebreak"></div>
+
+<h2><span class="num">3</span> 분석의 깊이 <span class="pts">20점</span></h2>
+
+<table>
+  <tr><th style="width:9mm">단계</th><th style="width:14mm">점수</th><th>기준</th></tr>
+  <tr><td class="c"><span class="lv l1">1</span></td><td class="pt">0–5</td>
+      <td>한 가지 차원의 순위 나열에서 끝남 (&ldquo;SP주 주문이 가장 많다&rdquo;)</td></tr>
+  <tr><td class="c"><span class="lv l2">2</span></td><td class="pt">6–11</td>
+      <td>두 변수의 관계를 보거나, 시간에 따른 변화를 봄</td></tr>
+  <tr><td class="c"><span class="lv l3">3</span></td><td class="pt">12–16</td>
+      <td>세그먼트를 나눠 비교하거나, 결과를 왜곡할 수 있는 요인을 고려함</td></tr>
+  <tr><td class="c"><span class="lv l4">4</span></td><td class="pt">17–20</td>
+      <td>위에 더해 <strong>반대 가설</strong>을 세워 데이터로 검증하거나 배제함</td></tr>
+</table>
+
+<p class="sub" style="font-size:9.4pt">
+  반대 가설의 예: &ldquo;지연된 주문의 리뷰가 낮은 게 아니라, 원래 리뷰가 낮은 카테고리가
+  배송이 오래 걸리는 것일 수도 있다&rdquo; → 카테고리를 고정하고 다시 본다.</p>
+
+<h2><span class="num">4</span> 비즈니스 해석 <span class="pts">15점</span></h2>
+
+<table>
+  <tr><th style="width:9mm">단계</th><th style="width:14mm">점수</th><th>기준</th></tr>
+  <tr><td class="c"><span class="lv l1">1</span></td><td class="pt">0–4</td>
+      <td>현상 서술만 있음. &ldquo;그래서 무엇인지&rdquo;가 없음</td></tr>
+  <tr><td class="c"><span class="lv l2">2</span></td><td class="pt">5–9</td>
+      <td>왜 그런지 가설을 제시함</td></tr>
+  <tr><td class="c"><span class="lv l3">3</span></td><td class="pt">10–13</td>
+      <td>가설이 데이터 특성이나 이커머스 도메인 맥락과 연결됨</td></tr>
+  <tr><td class="c"><span class="lv l4">4</span></td><td class="pt">14–15</td>
+      <td>인과를 단정하지 않고, 이 해석이 <strong>틀릴 수 있는 조건</strong>을 함께 밝힘</td></tr>
+</table>
+
+<h2><span class="num">5</span> 액션 제안 <span class="pts">10점</span></h2>
+
+<table>
+  <tr><th style="width:9mm">단계</th><th style="width:14mm">점수</th><th>기준</th></tr>
+  <tr><td class="c"><span class="lv l1">1</span></td><td class="pt">0–2</td>
+      <td>없거나 &ldquo;개선이 필요하다&rdquo; 수준</td></tr>
+  <tr><td class="c"><span class="lv l2">2</span></td><td class="pt">3–6</td>
+      <td>방향은 있으나 대상·기준이 불명확</td></tr>
+  <tr><td class="c"><span class="lv l3">3</span></td><td class="pt">7–10</td>
+      <td>대상·기준·확인 방법이 구체적</td></tr>
+</table>
+
+<table>
+  <tr><th style="width:14mm">단계</th><th>예시</th></tr>
+  <tr><td class="c"><span class="lv l1">1</span></td><td>&ldquo;배송을 개선하자&rdquo;</td></tr>
+  <tr><td class="c"><span class="lv l2">2</span></td><td>&ldquo;배송 지연이 심한 주(state)를 관리하자&rdquo;</td></tr>
+  <tr><td class="c"><span class="lv l3">3</span></td><td>&ldquo;실제 배송이 예상일보다 평균 6일 이상 늦는 4개 주에 대해 예상 배송일을
+      재산정하고, 3개월 뒤 해당 주의 <code>review_score</code> 평균이 오르는지 확인한다&rdquo;</td></tr>
+</table>
+
+<div class="pagebreak"></div>
+
+<h2><span class="num">6</span> 같은 질문, 두 개의 제출물</h2>
+
+<p>아래 수치는 <strong>기준 설명을 위해 지어낸 예시</strong>이며 실제 Olist 데이터의 값이 아닙니다.
+형식과 사고 과정만 참고하세요.</p>
+
+<div class="exhead bad">약한 제출물 &nbsp;·&nbsp; 합계 35점</div>
+<div class="exbody">
+  <p><span class="lbl">질문</span><br>배송이 늦으면 리뷰가 안 좋은가?</p>
+  <p><span class="lbl">쿼리</span></p>
+  <pre class="sql">SELECT
+  CASE WHEN o.order_delivered_customer_date &gt; o.order_estimated_delivery_date
+       THEN '지연' ELSE '정시' END AS delay,
+  AVG(r.review_score) AS avg_score
+FROM olist_raw.orders AS o
+JOIN olist_raw.order_reviews AS r ON o.order_id = r.order_id
+GROUP BY delay;</pre>
+  <p><span class="lbl">결과</span><br>지연 2.6 / 정시 4.3</p>
+  <p><span class="lbl">인사이트</span><br>지연되면 평균 리뷰가 낮다. 배송을 개선해야 한다.</p>
+  <div class="scoreline">
+    근거 사슬 <b>14</b>(2단계 · 취소·미배송 주문을 다루지 않았고 비교 기준선 없음) &nbsp;·&nbsp;
+    쿼리 설계 <b>10</b>(2단계 · 판단 지점 미처리) &nbsp;·&nbsp;
+    깊이 <b>5</b>(1단계) &nbsp;·&nbsp; 해석 <b>4</b>(1단계) &nbsp;·&nbsp; 액션 <b>2</b>(1단계)
+  </div>
+</div>
+
+<div class="pagebreak"></div>
+<div class="exhead ok">강한 제출물 &nbsp;·&nbsp; 합계 81점 &nbsp;<span style="font-weight:400">(같은 주제, 같은 테이블 2개)</span></div>
+<div class="exbody">
+  <p><span class="lbl">질문</span><br>배송이 예상일보다 늦게 도착한 주문은 정시 도착 주문보다 리뷰 점수가 낮은가?
+     낮다면 며칠부터 두드러지는가?</p>
+  <p><span class="lbl">쿼리</span></p>
+  <pre class="sql">WITH delivered AS (          -- 배송 완료 건만: 취소·미배송은 지연일을 잴 수 없음
+  SELECT
+    order_id,
+    DATE_DIFF(DATE(order_delivered_customer_date),
+              DATE(order_estimated_delivery_date), DAY) AS delay_days
+  FROM olist_raw.orders
+  WHERE order_status = 'delivered'
+    AND order_delivered_customer_date IS NOT NULL
+)
+SELECT
+  CASE WHEN d.delay_days &lt;= 0 THEN '정시 이내'
+       WHEN d.delay_days &lt;= 5 THEN '1-5일 지연'
+       WHEN d.delay_days &lt;= 10 THEN '6-10일 지연'
+       ELSE '11일 이상 지연' END AS delay_bucket,
+  COUNT(DISTINCT d.order_id) AS order_cnt,      -- 주문 단위 (아이템 아님)
+  ROUND(AVG(r.review_score), 2) AS avg_score
+FROM delivered AS d
+JOIN olist_raw.order_reviews AS r ON d.order_id = r.order_id   -- 리뷰 있는 주문만
+GROUP BY delay_bucket
+ORDER BY MIN(d.delay_days);</pre>
+  <p><span class="lbl">결과 <span style="font-weight:400">(예시)</span></span></p>
+  <table style="font-size:9pt; margin-bottom:2mm">
+    <tr><th>구간</th><th>주문 수</th><th>평균 리뷰</th></tr>
+    <tr><td>정시 이내</td><td class="pt">88,120</td><td class="pt">4.28</td></tr>
+    <tr><td>1-5일 지연</td><td class="pt">4,930</td><td class="pt">3.41</td></tr>
+    <tr><td>6-10일 지연</td><td class="pt">1,780</td><td class="pt">2.55</td></tr>
+    <tr><td>11일 이상 지연</td><td class="pt">1,640</td><td class="pt">1.92</td></tr>
+  </table>
+  <p><span class="lbl">인사이트</span><br>
+  전체 평균 리뷰는 <strong>4.09</strong>인데, 1–5일 지연 구간은 3.41로 이미 평균을 밑돕니다.
+  다만 하락이 가파른 지점은 <strong>6일</strong>부터로, 2.55까지 떨어져 정시 대비 1.7점 낮습니다.
+  &ldquo;늦으면 리뷰가 낮다&rdquo;가 아니라 <strong>&ldquo;6일을 넘기면 급락한다&rdquo;</strong>가 정확한 표현입니다.
+  약속 대비 편차가 임계치를 넘는 순간 고객이 이를 &lsquo;사고&rsquo;로 인식하는 것으로 보입니다.<br><br>
+  <em>설계 선택:</em> 지연일을 잴 수 없는 취소·미배송 건은 제외했습니다. 리뷰를 쓰지 않은 주문도
+  INNER JOIN으로 뺐는데, 리뷰 점수가 종속변수이므로 없는 행은 분석 대상이 아니기 때문입니다.
+  다만 이 선택 때문에 <strong>불만이 커서 아예 리뷰를 안 쓴 고객</strong>이 빠졌을 수 있어,
+  실제 지연의 악영향은 위 수치보다 클 가능성이 있습니다.<br><br>
+  <em>반대 가설 검증:</em> 배송이 오래 걸리는 카테고리가 원래 리뷰가 낮은 것일 수 있어
+  가구·대형가전을 제외하고 다시 집계했으나 구간별 격차는 유지되었습니다.<br><br>
+  <em>액션:</em> 6일 이상 지연 비중이 높은 상위 4개 주에 대해 예상 배송일을 현재보다 보수적으로
+  재산정하고, 3개월 뒤 해당 주의 지연 구간 분포와 평균 리뷰가 개선되는지 확인합니다.</p>
+  <div class="scoreline">
+    근거 사슬 <b>26</b>(4단계 · 전체 평균 기준선 제시) &nbsp;·&nbsp;
+    쿼리 설계 <b>22</b>(4단계 · 모집단·집계 단위·JOIN 종류를 처리하고 이유를 밝힘) &nbsp;·&nbsp;
+    깊이 <b>14</b>(3단계) &nbsp;·&nbsp; 해석 <b>11</b>(3단계) &nbsp;·&nbsp; 액션 <b>8</b>(3단계)
+  </div>
+</div>
+
+<div class="callout">
+  <p><strong>두 제출물의 쿼리 난이도 차이는 크지 않습니다.</strong> 강한 쪽도 테이블 2개를 조인했을 뿐입니다.
+  차이는 <code>WHERE order_status = 'delivered'</code> 한 줄, 구간을 나눈 판단,
+  그리고 <strong>왜 그렇게 했는지 적은 세 문장</strong>에서 나왔습니다.</p>
+</div>
+
+<div class="pagebreak"></div>
+
+<h2><span class="num">7</span> 제출 전 자가 점검</h2>
+
+<table>
+  <tr><th style="width:38mm">항목</th><th>스스로 확인</th></tr>
+  <tr><td>근거 사슬</td><td>내 쿼리를 말로 옮기면 무엇을 세는 문장이 되는가? 그게 내가 적은 질문과 같은가?</td></tr>
+  <tr><td>근거 사슬</td><td>인사이트에 쓴 숫자가 붙여넣은 결과 표에 실제로 있는가?</td></tr>
+  <tr><td>근거 사슬</td><td>이 숫자가 큰 건지 작은 건지 알려주는 비교 대상이 있는가?</td></tr>
+  <tr><td>쿼리 설계</td><td><code>order_status</code> 를 한 번이라도 생각했는가?</td></tr>
+  <tr><td>쿼리 설계</td><td>LEFT / INNER 선택이 의도한 것인가, 그냥 쓴 것인가?</td></tr>
+  <tr><td>쿼리 설계</td><td>결과의 행 하나가 무엇 단위인지 한 마디로 말할 수 있는가?</td></tr>
+  <tr><td>쿼리 설계</td><td>그 선택의 이유를 인사이트에 한 줄이라도 적었는가?</td></tr>
+  <tr><td>깊이</td><td>순위 나열에서 끝나지 않았는가?</td></tr>
+  <tr><td>해석</td><td>&ldquo;그래서 무엇&rdquo;에 답했는가? 틀릴 수 있는 조건을 밝혔는가?</td></tr>
+  <tr><td>액션</td><td>대상·기준·확인 방법이 들어 있는가?</td></tr>
+</table>
+
+<h2><span class="num">8</span> 참고: 테이블과 데이터 함정</h2>
+
+<h3>olist_raw 테이블</h3>
+<table style="font-size:8.8pt">
+  <tr><th style="width:44mm">테이블</th><th>주요 컬럼</th></tr>
+  <tr><td><code>orders</code></td><td>order_id, customer_id, order_status, order_purchase_timestamp,
+      order_approved_at, order_delivered_carrier_date, order_delivered_customer_date, order_estimated_delivery_date</td></tr>
+  <tr><td><code>order_items</code></td><td>order_id, order_item_id, product_id, seller_id, shipping_limit_date, price, freight_value</td></tr>
+  <tr><td><code>order_payments</code></td><td>order_id, payment_sequential, payment_type, payment_installments, payment_value</td></tr>
+  <tr><td><code>order_reviews</code></td><td>review_id, order_id, review_score, review_comment_title, review_comment_message,
+      review_creation_date, review_answer_timestamp</td></tr>
+  <tr><td><code>customers</code></td><td>customer_id, customer_unique_id, customer_zip_code_prefix, customer_city, customer_state</td></tr>
+  <tr><td><code>sellers</code></td><td>seller_id, seller_zip_code_prefix, seller_city, seller_state</td></tr>
+  <tr><td><code>products</code></td><td>product_id, product_category_name, product_name_lenght, product_description_lenght,
+      product_photos_qty, product_weight_g, product_length_cm, product_height_cm, product_width_cm</td></tr>
+  <tr><td><code>geolocation</code></td><td>geolocation_zip_code_prefix, geolocation_lat, geolocation_lng, geolocation_city, geolocation_state</td></tr>
+  <tr><td><code>product_category_name_translation</code></td><td>product_category_name, product_category_name_english</td></tr>
+</table>
+
+<h3>미리 알려주는 함정</h3>
+<ul>
+  <li><code>orders</code> 와 <code>customers</code> 는 <code>customer_id</code> 로 <strong>1:1</strong> 매칭됩니다.
+      재구매를 세려면 <code>customer_unique_id</code> 를 써야 합니다.</li>
+  <li><code>order_items</code> 에 행이 하나도 없는 주문이 <strong>775건</strong> 있습니다.
+      이 테이블과 조인하는 순간 조용히 사라집니다.</li>
+  <li>한 주문에 <code>order_item_id</code> 가 여러 개 붙을 수 있습니다.
+      주문 단위 집계와 상품 단위 집계를 섞으면 수치가 부풀려집니다.</li>
+  <li><code>order_status</code> 에는 <code>delivered</code> 외에 <code>canceled</code>,
+      <code>unavailable</code>, <code>shipped</code> 등이 섞여 있습니다.</li>
+  <li>데이터 기간은 2016-09 ~ 2018-10 입니다. 양 끝 구간은 데이터가 얇으니
+      시계열을 볼 때 주의하세요.</li>
+</ul>
+
+<div class="callout">
+  <p><strong>셀프체크 도구</strong> &mdash; 제출 전에 이 기준대로 자동 채점을 받아볼 수 있습니다.
+  항목별로 지금 몇 단계인지, 한 단계 올리려면 무엇을 해야 하는지 알려줍니다.
+  여러 번 고쳐서 다시 돌려도 됩니다. 링크와 접속 코드는 공지를 참고하세요.</p>
+</div>
+
+<div class="footer">
+  YBIGTA SQL 3주차 · Olist 인사이트 도출 과제 채점 기준 · 2026-07 ·
+  이 문서의 기준은 셀프체크 도구와 동일합니다(<code>rubric.py</code> 기준).
+  기준이 갱신되면 도구 쪽이 먼저 반영됩니다.
+</div>
+
+</body>
+</html>
