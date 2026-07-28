@@ -80,8 +80,11 @@ st.markdown(
         max-height: 32rem;
         line-height: 1.5;
       }
-      /* 질문은 한 문장이라 두 줄 높이에서 시작해 필요한 만큼만 늘어나게 */
-      .st-key-question textarea { min-height: 3.6rem; max-height: 12rem; }
+      /* 질문은 딱 2줄에서 시작해 필요한 만큼만 늘어나게.
+         rem 로 어림하면 글꼴·여백에 따라 어긋나므로 lh(줄높이 단위)로 2줄을 지정한다.
+         앞의 rem 값은 lh 를 모르는 브라우저용 대비값이다 (뒤 선언이 무시되고 이게 남는다). */
+      .st-key-question textarea { min-height: 3rem; max-height: 12rem; }
+      .st-key-question textarea { min-height: calc(2lh + 1.4rem); }
       /* 쿼리와 인사이트는 길어지기 쉬우므로 처음부터 넉넉하게, 상한도 높게 */
       .st-key-sql textarea    { min-height: 13rem; max-height: 44rem; }
       .st-key-insight textarea { min-height: 13rem; max-height: 44rem; }
