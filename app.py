@@ -3,6 +3,9 @@ Olist 인사이트 셀프체크
 YBIGTA SQL 3주차 과제용. 제출 전 스스로 점검하는 도구이며, 이 점수는 성적이 아니다.
 """
 
+import csv
+import html
+import io
 import json
 import urllib.request
 from datetime import datetime
@@ -136,7 +139,7 @@ with st.sidebar:
     admin_code = st.secrets.get("ADMIN_CODE", "")
     if admin_code:
         st.divider()
-        entered = st.text_input("발제자 코드", type="password", key="admin_input")
+        entered = st.text_input("admin", type="password", key="admin_input")
         if entered:
             st.session_state.admin_ok = entered.strip() == admin_code
             if not st.session_state.admin_ok:
@@ -150,27 +153,25 @@ st.caption(
     "한 단계 올리려면 뭘 해야 하는지 알려줍니다."
 )
 
-st.info(
-    f"""**부담 없이 여러 번 돌려보세요.** 값이 저렴한 API로 결제해 두었으니
-비용은 전혀 신경 쓰지 않으셔도 됩니다. **인당 {MAX_CALLS_PER_SESSION}번까지** 가능합니다.
+# st.info 의 파란 배경은 너무 튀어서, 테두리만 있는 중립 박스로 둔다.
+with st.container(border=True):
+    st.markdown(
+        f"""**부담 없이 여러 번 돌려보세요.** 값이 저렴한 API로 결제해 두었으니 비용은
+신경 쓰지 않으셔도 됩니다. **인당 {MAX_CALLS_PER_SESSION}번 정도까지** 가능합니다.
 
-한 번에 잘 나오지 않는 게 정상입니다. 이 도구의 쓸모는 점수가 아니라, 고쳐서 다시 넣을 때
-**어디가 왜 약한지 점점 구체적으로 알게 되는 것**에 있습니다. 점수가 낮게 나왔다고
-그냥 내지 마시고, 피드백을 보고 한 번 더 고쳐보세요."""
-)
+한 번에 잘 나오지 않는 게 정상입니다. 피드백을 보고 한 번 더 고쳐보세요."""
+    )
 
 name = st.text_input(
     "1. 이름",
     max_chars=LIMITS["name"],
 )
-st.caption("채점 결과 화면에 표시하는 용도입니다. API로 전송되지 않습니다.")
 
 question = st.text_input(
-    "2. 무엇을 알아보려 했나요? (한 문장)",
+    "2. 무엇을 알아보려 했나요?",
     placeholder="예: 배송이 예상보다 늦은 주문은 리뷰 점수가 실제로 더 낮은가?",
     max_chars=LIMITS["question"],
 )
-st.caption("이 질문과 쿼리가 정말 같은 것을 묻는지가 배점이 가장 큰 항목(30점)입니다.")
 
 sql = st.text_area(
     "3. 작성한 쿼리",
@@ -337,6 +338,84 @@ def log_submission(
             pass
 
 
+def _log_fields(rows: list[dict]) -> list[str]:
+    """컬럼 순서를 고정한다. 루브릭 개정으로 옛 행에 없는 키가 있어도 견디게
+    실제 등장한 키의 합집합을 쓴다."""
+    preferred = [
+        "time", "name", "total",
+        *[k for k, _, _ in DIMENSIONS],
+        "question", "sql", "query_result", "insight",
+        "one_line", "query_translation", "cost_usd",
+    ]
+    seen = {k for r in rows for k in r}
+    return [k for k in preferred if k in seen] + sorted(seen - set(preferred))
+
+
+def log_as_csv(rows: list[dict]) -> bytes:
+    """엑셀에서 한글이 깨지지 않도록 BOM 을 붙인 UTF-8 CSV."""
+    fields = _log_fields(rows)
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=fields, extrasaction="ignore")
+    writer.writeheader()
+    for r in rows:
+        writer.writerow({k: r.get(k, "") for k in fields})
+    return buf.getvalue().encode("utf-8-sig")
+
+
+def log_as_html(rows: list[dict]) -> bytes:
+    """읽기용 제출 모음. 브라우저에서 열어 Ctrl+P → PDF 로 저장할 수 있다.
+    (Streamlit Cloud 에는 Chrome 이 없어 서버에서 PDF 를 직접 만들 수 없다.)"""
+    e = html.escape
+    labels = {k: lb for k, lb, _ in DIMENSIONS}
+    maxes = {k: mx for k, _, mx in DIMENSIONS}
+    stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    parts = [f"""<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<title>Olist 인사이트 제출 모음</title>
+<style>
+  body {{ font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+         max-width: 900px; margin: 0 auto; padding: 32px; line-height: 1.6; color: #222; }}
+  h1 {{ font-size: 22px; border-bottom: 2px solid #333; padding-bottom: 8px; }}
+  h2 {{ font-size: 17px; margin-top: 36px; background: #f4f4f6;
+        padding: 8px 12px; border-left: 4px solid #666; }}
+  h3 {{ font-size: 14px; margin: 18px 0 6px; color: #555; }}
+  pre {{ background: #f7f7f9; border: 1px solid #e2e2e6; border-radius: 4px;
+         padding: 12px; overflow-x: auto; font-size: 12px; white-space: pre-wrap; }}
+  table.scores {{ border-collapse: collapse; font-size: 12px; margin: 10px 0; }}
+  table.scores td, table.scores th {{ border: 1px solid #ddd; padding: 4px 10px; }}
+  table.scores th {{ background: #f4f4f6; white-space: nowrap; }}
+  .meta {{ color: #777; font-size: 12px; }}
+  .total {{ font-size: 15px; font-weight: 700; }}
+  .sub {{ page-break-inside: avoid; page-break-after: always; }}
+  .sub:last-child {{ page-break-after: auto; }}
+  @media print {{ body {{ padding: 0; }} h2 {{ background: none; }} }}
+</style></head><body>
+<h1>Olist 인사이트 셀프체크 — 제출 모음</h1>
+<p class="meta">내려받은 시각 {e(stamp)} · 총 {len(rows)}건 · 최신순</p>"""]
+
+    for i, r in enumerate(rows, 1):
+        keys = [k for k in labels if k in r]
+        head = "".join(f"<th>{e(labels[k])}</th>" for k in keys)
+        cells = "".join(f"<td>{e(str(r[k]))} / {maxes[k]}</td>" for k in keys)
+        parts.append(f"""
+<div class="sub">
+<h2>{i}. {e(str(r.get('name', '(이름 없음)')))}
+    &nbsp;<span class="total">{e(str(r.get('total', '?')))} / 100</span></h2>
+<p class="meta">{e(str(r.get('time', '')))}</p>
+<table class="scores"><tr>{head}</tr><tr>{cells}</tr></table>
+<h3>질문</h3><p>{e(str(r.get('question', '')))}</p>
+<h3>쿼리</h3><pre>{e(str(r.get('sql', '')))}</pre>
+<h3>실행 결과</h3><pre>{e(str(r.get('query_result', '')))}</pre>
+<h3>인사이트</h3><p>{e(str(r.get('insight', ''))).replace(chr(10), '<br>')}</p>
+<h3>채점기가 읽은 쿼리</h3>
+<p class="meta">{e(str(r.get('query_translation', '')))}</p>
+</div>""")
+
+    parts.append("</body></html>")
+    return "".join(parts).encode("utf-8")
+
+
 def read_log() -> list[dict]:
     """기록된 제출을 최신순으로 읽는다. 발제자 패널에서만 쓴다."""
     if not LOG_PATH.exists():
@@ -489,14 +568,34 @@ if st.session_state.admin_ok:
     if not rows:
         st.info("아직 이 인스턴스에 기록된 제출이 없습니다.")
     else:
-        st.download_button(
-            "전체 내려받기 (JSONL)",
+        stamp = datetime.now().strftime("%Y%m%d")
+        d1, d2, d3 = st.columns(3)
+        d1.download_button(
+            "📊 CSV (엑셀)",
+            data=log_as_csv(rows),
+            file_name=f"제출모음_{stamp}.csv",
+            mime="text/csv",
+            width="stretch",
+            help="엑셀에서 바로 열립니다 (한글 깨짐 방지 처리됨)",
+        )
+        d2.download_button(
+            "📄 HTML (인쇄·PDF)",
+            data=log_as_html(rows),
+            file_name=f"제출모음_{stamp}.html",
+            mime="text/html",
+            width="stretch",
+            help="브라우저로 열어 Ctrl+P → 'PDF로 저장' 하면 PDF가 됩니다",
+        )
+        d3.download_button(
+            "🗄 JSONL (원본)",
             data=LOG_PATH.read_bytes(),
-            file_name="submissions.jsonl",
+            file_name=f"제출모음_{stamp}.jsonl",
             mime="application/x-ndjson",
+            width="stretch",
+            help="한 줄에 한 건. 나중에 다시 불러 쓰기 좋은 형식",
         )
         st.dataframe(rows, width="stretch", hide_index=True)
-        st.caption("셀을 클릭하면 전체 내용이 펼쳐집니다. 표 우측 상단에서 CSV로도 받을 수 있습니다.")
+        st.caption("셀을 클릭하면 전체 내용이 펼쳐집니다.")
     st.warning(
         "이 파일은 **재배포·리부트 때 사라집니다.** 영구 보존이 필요하면 "
         "`LOG_WEBHOOK_URL` 시크릿을 설정하세요 (README 참고). "

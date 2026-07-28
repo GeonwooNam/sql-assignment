@@ -163,8 +163,8 @@
 
 <div class="callout">
   <p><strong>이 과제는 쿼리의 화려함을 보지 않습니다.</strong> 테이블 2개만 조인해도 최고 단계가 나올 수 있고,
-  5개 테이블에 윈도우 함수를 써도 1단계가 될 수 있습니다. 보는 것은 하나입니다 —
-  <strong>세운 질문에 답하기 위해 무엇을 고민했는가.</strong></p>
+  5개 테이블에 윈도우 함수를 써도 1단계가 될 수 있습니다. 보는 것은 두 가지입니다 —
+  <strong>어떤 질문을 세웠는가</strong>, 그리고 <strong>그 질문에 답하려고 무엇을 고민했는가.</strong></p>
 </div>
 
 <h2><span class="num">0</span> 제출물과 배점</h2>
@@ -172,62 +172,73 @@
 <p>네 가지를 제출합니다. 앞의 세 개가 서로 어긋나면 마지막이 아무리 좋아도 분석이 성립하지 않습니다.</p>
 
 <table>
-  <tr><td style="width:32mm"><strong>① 질문</strong></td><td>무엇을 알아보려 했는지 한 문장. <em>배점이 가장 큰 항목의 기준이 되므로 반드시 적습니다.</em></td></tr>
+  <tr><td style="width:32mm"><strong>① 질문</strong></td><td>무엇을 알아보려 했는지 한 문장. <em>이 자체가 채점 항목이므로 반드시 적습니다.</em></td></tr>
   <tr><td><strong>② 쿼리</strong></td><td>BigQuery에서 실제로 돌린 SQL</td></tr>
   <tr><td><strong>③ 실행 결과</strong></td><td>결과 표를 그대로 복사. 행이 많으면 상위 10~20행</td></tr>
   <tr><td><strong>④ 인사이트</strong></td><td>무엇을 발견했고, 왜 그렇게 보며, 그래서 무엇을 하자는 것인지</td></tr>
 </table>
 
 <div class="weights">
-  <div class="w"><div class="n">30</div><div class="t">근거 사슬<br>정합성</div></div>
+  <div class="w"><div class="n">20</div><div class="t">질문의<br>질</div></div>
   <div class="w"><div class="n">25</div><div class="t">쿼리 설계<br>판단</div></div>
+  <div class="w"><div class="n">15</div><div class="t">근거 사슬<br>정합성</div></div>
   <div class="w"><div class="n">20</div><div class="t">분석의<br>깊이</div></div>
-  <div class="w"><div class="n">15</div><div class="t">비즈니스<br>해석</div></div>
-  <div class="w"><div class="n">10</div><div class="t">액션<br>제안</div></div>
+  <div class="w"><div class="n">12</div><div class="t">비즈니스<br>해석</div></div>
+  <div class="w"><div class="n">8</div><div class="t">액션<br>제안</div></div>
 </div>
 
 <p><strong>60점 이상이면 제출 권장 수준</strong>입니다. 점수는 성적이 아니라
 &ldquo;이 정도면 내도 되겠다&rdquo;는 신호로만 쓰세요.</p>
 
-<h2><span class="num">1</span> 근거 사슬 정합성 <span class="pts">30점</span></h2>
+<div class="callout">
+  <p><strong>정합성에 배점을 많이 주지 않는 이유.</strong> 질문·쿼리·결과·주장이 어긋나지 않는 것은
+  잘한 것이 아니라 <strong>분석이 성립하기 위한 최소 조건</strong>입니다. 그래서 15점입니다.
+  &ldquo;시시한 질문을 정확하게 답한&rdquo; 제출물이 고득점하지 않도록, 점수는
+  <strong>질문의 질(20점)</strong> 과 <strong>쿼리 설계 판단(25점)</strong> 에서 갈립니다.</p>
+</div>
 
-<p><strong>질문 → 쿼리 → 결과 → 주장</strong>이 한 줄로 이어지는지 봅니다.
-네 고리 중 하나라도 끊기면 나머지가 아무리 좋아도 분석이 성립하지 않기 때문에 배점이 가장 큽니다.</p>
+<h2><span class="num">1</span> 질문의 질 <span class="pts">20점</span></h2>
+
+<p>정해진 문제가 없는 과제이므로 <strong>무엇을 물었는지가 출발점</strong>입니다.
+실력 차이가 가장 크게 드러나는 지점이기도 합니다. 답하기 전에 질문이 좋아야 합니다.</p>
 
 <table>
   <tr><th style="width:9mm">단계</th><th style="width:14mm">점수</th><th>기준</th></tr>
-  <tr><td class="c"><span class="lv l1">1</span></td><td class="pt">0–8</td>
-      <td>사슬이 끊김. 질문이 없거나, 쿼리가 질문과 다른 것을 계산하거나, 주장이 결과에 없는 내용임</td></tr>
-  <tr><td class="c"><span class="lv l2">2</span></td><td class="pt">9–16</td>
-      <td>질문과 쿼리가 대체로 맞지만 <strong>범위가 어긋남</strong> (아래 표 참고)</td></tr>
-  <tr><td class="c"><span class="lv l3">3</span></td><td class="pt">17–24</td>
-      <td>질문·쿼리·결과·주장이 일치하고, 인용한 수치가 붙여넣은 결과에 실제로 있음</td></tr>
-  <tr><td class="c"><span class="lv l4">4</span></td><td class="pt">25–30</td>
-      <td>위에 더해 <strong>비교 기준선</strong>(전체 평균·다른 세그먼트·이전 기간)을 제시해
-          &ldquo;이 숫자가 큰지 작은지&rdquo;에 답함</td></tr>
+  <tr><td class="c"><span class="lv l1">1</span></td><td class="pt">0–5</td>
+      <td>질문이 없다. 또는 이 데이터로 답할 수 없다. 또는 <strong>답이 이미 자명하다</strong></td></tr>
+  <tr><td class="c"><span class="lv l2">2</span></td><td class="pt">6–11</td>
+      <td>답할 수 있고 자명하지도 않지만 <strong>막연하다.</strong> 대상이나 비교 기준이 특정되지 않음</td></tr>
+  <tr><td class="c"><span class="lv l3">3</span></td><td class="pt">12–16</td>
+      <td><strong>대상 · 비교축 · 판단 기준이 특정됨.</strong> 답이 나오면 무엇을 알게 되는지가 분명함</td></tr>
+  <tr><td class="c"><span class="lv l4">4</span></td><td class="pt">17–20</td>
+      <td>위에 더해 <strong>답이 어느 쪽으로 나와도 의미가 있는 질문.</strong>
+          통념을 검증하거나, 반례가 있을 만한 곳을 찌름</td></tr>
 </table>
 
-<h3>2단계로 내려가는 전형적인 어긋남</h3>
+<h3>같은 주제, 네 단계의 질문</h3>
 
 <table>
-  <tr><th style="width:46mm">이렇게 물어놓고</th><th>이렇게 세면 다른 걸 센 것</th></tr>
-  <tr><td>&ldquo;재구매 고객&rdquo;</td>
-      <td><code>customer_id</code> 로 셈. 이 컬럼은 <strong>주문마다 새로 생기므로</strong> 재구매가 잡히지 않습니다.
-          사람 단위는 <code>customer_unique_id</code></td></tr>
-  <tr><td>&ldquo;배송 지연&rdquo;</td>
-      <td><code>canceled</code>·<code>unavailable</code> 주문까지 포함. 배송된 적 없는 주문의 지연은 의미가 없습니다</td></tr>
-  <tr><td>&ldquo;주문당 평균&rdquo;</td>
-      <td><code>order_items</code> 단위로 셈. 한 주문에 상품이 3개면 그 주문이 3번 계산됩니다</td></tr>
-  <tr><td>&ldquo;카테고리별&rdquo;</td>
-      <td>INNER JOIN 때문에 상품 정보가 없는 주문이 <strong>조용히</strong> 빠짐. 분모가 달라집니다</td></tr>
-  <tr><td>&ldquo;전체 주문 중&rdquo;</td>
-      <td><code>order_items</code> 와 조인. 항목이 하나도 없는 주문 <strong>775건</strong>이 사라집니다</td></tr>
+  <tr><th style="width:14mm">단계</th><th>질문</th></tr>
+  <tr><td class="c"><span class="lv l1">1</span></td>
+      <td>&ldquo;주문이 가장 많은 주는 어디인가&rdquo;<br>
+          <span style="color:#777">집계 한 번으로 끝나고, 알아도 할 일이 없습니다.</span></td></tr>
+  <tr><td class="c"><span class="lv l2">2</span></td>
+      <td>&ldquo;배송이 리뷰에 영향을 주는가&rdquo;<br>
+          <span style="color:#777">무엇을 &lsquo;배송&rsquo;으로, 무엇을 &lsquo;영향&rsquo;으로 볼지 정해지지 않았습니다.</span></td></tr>
+  <tr><td class="c"><span class="lv l3">3</span></td>
+      <td>&ldquo;약속일보다 3일 이상 늦게 도착한 주문은 정시 도착 주문보다 리뷰 평균이 낮은가&rdquo;<br>
+          <span style="color:#777">대상·비교축·판단 기준이 모두 특정됐습니다.</span></td></tr>
+  <tr><td class="c"><span class="lv l4">4</span></td>
+      <td>&ldquo;배송 지연이 리뷰를 낮춘다면, <strong>지연에 관대한 카테고리도 있는가.</strong>
+          가구처럼 원래 오래 걸린다고 기대되는 상품군은 같은 지연에도 리뷰가 덜 떨어지지 않을까&rdquo;<br>
+          <span style="color:#777">답이 &lsquo;그렇다&rsquo;여도 &lsquo;아니다&rsquo;여도 알게 되는 것이 있습니다.</span></td></tr>
 </table>
 
 <h2><span class="num">2</span> 쿼리 설계 판단 <span class="pts">25점</span></h2>
 
 <p>기법의 개수가 아니라 <strong>선택의 흔적</strong>을 봅니다.
-JOIN을 더 붙인다고, 윈도우 함수를 쓴다고 점수가 오르지 않습니다.</p>
+JOIN을 더 붙인다고, 윈도우 함수를 쓴다고 점수가 오르지 않습니다.
+<strong>배점이 가장 큰 항목입니다.</strong></p>
 
 <table>
   <tr><th style="width:9mm">단계</th><th style="width:14mm">점수</th><th>기준</th></tr>
@@ -270,9 +281,51 @@ JOIN을 더 붙인다고, 윈도우 함수를 쓴다고 점수가 오르지 않�
   이걸 포함하면 표본이 약 3% 늘지만 지연일 계산이 불가능해집니다.&rdquo;</p>
 </div>
 
+<h2><span class="num">3</span> 근거 사슬 정합성 <span class="pts">15점</span></h2>
+
+<p><strong>질문 → 쿼리 → 결과 → 주장</strong>이 한 줄로 이어지는지 봅니다.
+잘하면 받는 점수가 아니라 <strong>어긋나면 잃는 점수</strong>입니다. 그래서 배점을 낮게 뒀습니다.
+대신 아래 <strong>연쇄 차단</strong>이 걸립니다.</p>
+
+<table>
+  <tr><th style="width:9mm">단계</th><th style="width:14mm">점수</th><th>기준</th></tr>
+  <tr><td class="c"><span class="lv l1">1</span></td><td class="pt">0–4</td>
+      <td>사슬이 끊김. 질문이 없거나, 쿼리가 질문과 다른 것을 계산하거나, 주장이 결과에 없는 내용임</td></tr>
+  <tr><td class="c"><span class="lv l2">2</span></td><td class="pt">5–8</td>
+      <td>질문과 쿼리가 대체로 맞지만 <strong>범위가 어긋남</strong> (아래 표 참고)</td></tr>
+  <tr><td class="c"><span class="lv l3">3</span></td><td class="pt">9–12</td>
+      <td>질문·쿼리·결과·주장이 일치하고, 인용한 수치가 붙여넣은 결과에 실제로 있음</td></tr>
+  <tr><td class="c"><span class="lv l4">4</span></td><td class="pt">13–15</td>
+      <td>위에 더해 <strong>비교 기준선</strong>(전체 평균·다른 세그먼트·이전 기간)을 제시해
+          &ldquo;이 숫자가 큰지 작은지&rdquo;에 답함</td></tr>
+</table>
+
+<div class="callout">
+  <p><strong>연쇄 차단.</strong> 이 항목이 1단계면 <strong>분석의 깊이와 비즈니스 해석도 각각 2단계를
+  넘지 못합니다</strong>(최대 11점 / 7점). 질문에 답하지 못하는 쿼리에서 나온 깊이와 해석은
+  근거가 없기 때문입니다. 배점이 15점으로 낮아도 어긋남의 대가는 작지 않습니다.</p>
+</div>
+
+<h3>2단계로 내려가는 전형적인 어긋남</h3>
+
+<table>
+  <tr><th style="width:46mm">이렇게 물어놓고</th><th>이렇게 세면 다른 걸 센 것</th></tr>
+  <tr><td>&ldquo;재구매 고객&rdquo;</td>
+      <td><code>customer_id</code> 로 셈. 이 컬럼은 <strong>주문마다 새로 생기므로</strong> 재구매가 잡히지 않습니다.
+          사람 단위는 <code>customer_unique_id</code></td></tr>
+  <tr><td>&ldquo;배송 지연&rdquo;</td>
+      <td><code>canceled</code>·<code>unavailable</code> 주문까지 포함. 배송된 적 없는 주문의 지연은 의미가 없습니다</td></tr>
+  <tr><td>&ldquo;주문당 평균&rdquo;</td>
+      <td><code>order_items</code> 단위로 셈. 한 주문에 상품이 3개면 그 주문이 3번 계산됩니다</td></tr>
+  <tr><td>&ldquo;카테고리별&rdquo;</td>
+      <td>INNER JOIN 때문에 상품 정보가 없는 주문이 <strong>조용히</strong> 빠짐. 분모가 달라집니다</td></tr>
+  <tr><td>&ldquo;전체 주문 중&rdquo;</td>
+      <td><code>order_items</code> 와 조인. 항목이 하나도 없는 주문 <strong>775건</strong>이 사라집니다</td></tr>
+</table>
+
 <div class="pagebreak"></div>
 
-<h2><span class="num">3</span> 분석의 깊이 <span class="pts">20점</span></h2>
+<h2><span class="num">4</span> 분석의 깊이 <span class="pts">20점</span></h2>
 
 <table>
   <tr><th style="width:9mm">단계</th><th style="width:14mm">점수</th><th>기준</th></tr>
@@ -290,29 +343,29 @@ JOIN을 더 붙인다고, 윈도우 함수를 쓴다고 점수가 오르지 않�
   반대 가설의 예: &ldquo;지연된 주문의 리뷰가 낮은 게 아니라, 원래 리뷰가 낮은 카테고리가
   배송이 오래 걸리는 것일 수도 있다&rdquo; → 카테고리를 고정하고 다시 본다.</p>
 
-<h2><span class="num">4</span> 비즈니스 해석 <span class="pts">15점</span></h2>
+<h2><span class="num">5</span> 비즈니스 해석 <span class="pts">12점</span></h2>
 
 <table>
   <tr><th style="width:9mm">단계</th><th style="width:14mm">점수</th><th>기준</th></tr>
-  <tr><td class="c"><span class="lv l1">1</span></td><td class="pt">0–4</td>
+  <tr><td class="c"><span class="lv l1">1</span></td><td class="pt">0–3</td>
       <td>현상 서술만 있음. &ldquo;그래서 무엇인지&rdquo;가 없음</td></tr>
-  <tr><td class="c"><span class="lv l2">2</span></td><td class="pt">5–9</td>
+  <tr><td class="c"><span class="lv l2">2</span></td><td class="pt">4–7</td>
       <td>왜 그런지 가설을 제시함</td></tr>
-  <tr><td class="c"><span class="lv l3">3</span></td><td class="pt">10–13</td>
+  <tr><td class="c"><span class="lv l3">3</span></td><td class="pt">8–10</td>
       <td>가설이 데이터 특성이나 이커머스 도메인 맥락과 연결됨</td></tr>
-  <tr><td class="c"><span class="lv l4">4</span></td><td class="pt">14–15</td>
+  <tr><td class="c"><span class="lv l4">4</span></td><td class="pt">11–12</td>
       <td>인과를 단정하지 않고, 이 해석이 <strong>틀릴 수 있는 조건</strong>을 함께 밝힘</td></tr>
 </table>
 
-<h2><span class="num">5</span> 액션 제안 <span class="pts">10점</span></h2>
+<h2><span class="num">6</span> 액션 제안 <span class="pts">8점</span></h2>
 
 <table>
   <tr><th style="width:9mm">단계</th><th style="width:14mm">점수</th><th>기준</th></tr>
   <tr><td class="c"><span class="lv l1">1</span></td><td class="pt">0–2</td>
       <td>없거나 &ldquo;개선이 필요하다&rdquo; 수준</td></tr>
-  <tr><td class="c"><span class="lv l2">2</span></td><td class="pt">3–6</td>
+  <tr><td class="c"><span class="lv l2">2</span></td><td class="pt">3–5</td>
       <td>방향은 있으나 대상·기준이 불명확</td></tr>
-  <tr><td class="c"><span class="lv l3">3</span></td><td class="pt">7–10</td>
+  <tr><td class="c"><span class="lv l3">3</span></td><td class="pt">6–8</td>
       <td>대상·기준·확인 방법이 구체적</td></tr>
 </table>
 
@@ -326,12 +379,12 @@ JOIN을 더 붙인다고, 윈도우 함수를 쓴다고 점수가 오르지 않�
 
 <div class="pagebreak"></div>
 
-<h2><span class="num">6</span> 같은 질문, 두 개의 제출물</h2>
+<h2><span class="num">7</span> 같은 질문, 두 개의 제출물</h2>
 
 <p>아래 수치는 <strong>기준 설명을 위해 지어낸 예시</strong>이며 실제 Olist 데이터의 값이 아닙니다.
 형식과 사고 과정만 참고하세요.</p>
 
-<div class="exhead bad">약한 제출물 &nbsp;·&nbsp; 합계 35점</div>
+<div class="exhead bad">약한 제출물 &nbsp;·&nbsp; 합계 34점</div>
 <div class="exbody">
   <p><span class="lbl">질문</span><br>배송이 늦으면 리뷰가 안 좋은가?</p>
   <p><span class="lbl">쿼리</span></p>
@@ -345,14 +398,15 @@ GROUP BY delay;</pre>
   <p><span class="lbl">결과</span><br>지연 2.6 / 정시 4.3</p>
   <p><span class="lbl">인사이트</span><br>지연되면 평균 리뷰가 낮다. 배송을 개선해야 한다.</p>
   <div class="scoreline">
-    근거 사슬 <b>14</b>(2단계 · 취소·미배송 주문을 다루지 않았고 비교 기준선 없음) &nbsp;·&nbsp;
+    질문의 질 <b>8</b>(2단계 · 무엇을 지연으로, 무엇을 &lsquo;안 좋음&rsquo;으로 볼지 미정) &nbsp;·&nbsp;
     쿼리 설계 <b>10</b>(2단계 · 판단 지점 미처리) &nbsp;·&nbsp;
-    깊이 <b>5</b>(1단계) &nbsp;·&nbsp; 해석 <b>4</b>(1단계) &nbsp;·&nbsp; 액션 <b>2</b>(1단계)
+    근거 사슬 <b>7</b>(2단계 · 취소·미배송을 다루지 않았고 비교 기준선 없음) &nbsp;·&nbsp;
+    깊이 <b>4</b>(1단계) &nbsp;·&nbsp; 해석 <b>3</b>(1단계) &nbsp;·&nbsp; 액션 <b>2</b>(1단계)
   </div>
 </div>
 
 <div class="pagebreak"></div>
-<div class="exhead ok">강한 제출물 &nbsp;·&nbsp; 합계 81점 &nbsp;<span style="font-weight:400">(같은 주제, 같은 테이블 2개)</span></div>
+<div class="exhead ok">강한 제출물 &nbsp;·&nbsp; 합계 86점 &nbsp;<span style="font-weight:400">(같은 주제, 같은 테이블 2개)</span></div>
 <div class="exbody">
   <p><span class="lbl">질문</span><br>배송이 예상일보다 늦게 도착한 주문은 정시 도착 주문보다 리뷰 점수가 낮은가?
      낮다면 며칠부터 두드러지는가?</p>
@@ -399,24 +453,31 @@ ORDER BY MIN(d.delay_days);</pre>
   <em>액션:</em> 6일 이상 지연 비중이 높은 상위 4개 주에 대해 예상 배송일을 현재보다 보수적으로
   재산정하고, 3개월 뒤 해당 주의 지연 구간 분포와 평균 리뷰가 개선되는지 확인합니다.</p>
   <div class="scoreline">
-    근거 사슬 <b>26</b>(4단계 · 전체 평균 기준선 제시) &nbsp;·&nbsp;
+    질문의 질 <b>17</b>(4단계 · 대상·비교축이 특정되고, &ldquo;며칠부터&rdquo;는 답이 어느 쪽이어도 의미가 있음) &nbsp;·&nbsp;
     쿼리 설계 <b>22</b>(4단계 · 모집단·집계 단위·JOIN 종류를 처리하고 이유를 밝힘) &nbsp;·&nbsp;
-    깊이 <b>14</b>(3단계) &nbsp;·&nbsp; 해석 <b>11</b>(3단계) &nbsp;·&nbsp; 액션 <b>8</b>(3단계)
+    근거 사슬 <b>13</b>(4단계 · 전체 평균 기준선 제시) &nbsp;·&nbsp;
+    깊이 <b>17</b>(4단계 · 반대 가설을 세워 데이터로 배제함) &nbsp;·&nbsp;
+    해석 <b>10</b>(3단계) &nbsp;·&nbsp; 액션 <b>7</b>(3단계)
   </div>
 </div>
 
 <div class="callout">
   <p><strong>두 제출물의 쿼리 난이도 차이는 크지 않습니다.</strong> 강한 쪽도 테이블 2개를 조인했을 뿐입니다.
-  차이는 <code>WHERE order_status = 'delivered'</code> 한 줄, 구간을 나눈 판단,
-  그리고 <strong>왜 그렇게 했는지 적은 세 문장</strong>에서 나왔습니다.</p>
+  차이는 <strong>질문을 좁힌 것</strong>(&ldquo;늦으면 안 좋은가&rdquo; → &ldquo;며칠부터 두드러지는가&rdquo;),
+  <code>WHERE order_status = 'delivered'</code> 한 줄, 구간을 나눈 판단,
+  그리고 <strong>왜 그렇게 했는지 적은 세 문장</strong>에서 나왔습니다.
+  52점 차이의 상당 부분은 <strong>질문을 다시 쓴 데서</strong> 나왔습니다.</p>
 </div>
 
 <div class="pagebreak"></div>
 
-<h2><span class="num">7</span> 제출 전 자가 점검</h2>
+<h2><span class="num">8</span> 제출 전 자가 점검</h2>
 
 <table>
   <tr><th style="width:38mm">항목</th><th>스스로 확인</th></tr>
+  <tr><td>질문</td><td>내 질문은 집계 한 번으로 끝나는 것이 아닌가? 답을 알면 무엇을 할 수 있는가?</td></tr>
+  <tr><td>질문</td><td>대상·비교축·판단 기준이 문장 안에 들어 있는가?</td></tr>
+  <tr><td>질문</td><td>답이 반대로 나와도 쓸 말이 있는가? 한쪽 답만 기대하고 있다면 질문을 다시 보세요</td></tr>
   <tr><td>근거 사슬</td><td>내 쿼리를 말로 옮기면 무엇을 세는 문장이 되는가? 그게 내가 적은 질문과 같은가?</td></tr>
   <tr><td>근거 사슬</td><td>인사이트에 쓴 숫자가 붙여넣은 결과 표에 실제로 있는가?</td></tr>
   <tr><td>근거 사슬</td><td>이 숫자가 큰 건지 작은 건지 알려주는 비교 대상이 있는가?</td></tr>
@@ -429,7 +490,7 @@ ORDER BY MIN(d.delay_days);</pre>
   <tr><td>액션</td><td>대상·기준·확인 방법이 들어 있는가?</td></tr>
 </table>
 
-<h2><span class="num">8</span> 참고: 테이블과 데이터 함정</h2>
+<h2><span class="num">9</span> 참고: 테이블과 데이터 함정</h2>
 
 <h3>olist_raw 테이블</h3>
 <table style="font-size:8.8pt">
@@ -469,7 +530,7 @@ ORDER BY MIN(d.delay_days);</pre>
 </div>
 
 <div class="footer">
-  YBIGTA SQL 3주차 · Olist 인사이트 도출 과제 채점 기준 · 2026-07 ·
+  YBIGTA SQL 3주차 · Olist 인사이트 도출 과제 채점 기준 · 2026-07-28 개정 ·
   이 문서의 기준은 셀프체크 도구와 동일합니다(<code>rubric.py</code> 기준).
   기준이 갱신되면 도구 쪽이 먼저 반영됩니다.
 </div>
