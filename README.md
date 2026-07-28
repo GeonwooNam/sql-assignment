@@ -1,7 +1,7 @@
 # Olist 인사이트 셀프체크
 
 YBIGTA SQL 3주차 과제용 셀프체크 도구. 학회원이 쿼리 · 실행 결과 · 인사이트를 넣으면
-Claude가 루브릭에 따라 점수와 구체적 피드백을 준다.
+GPT-5.6 Terra가 루브릭에 따라 점수와 구체적 피드백을 준다.
 
 **설계 전제: 이 점수는 성적이 아니고 통과 기준도 아니다.** 제출 전 스스로 점검하는
 도구이고, UI 문구도 전부 그렇게 잡혀 있다. 점수를 게이트로 쓰면 학회원이 데이터가 아니라
@@ -23,12 +23,13 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
 cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-# secrets.toml 을 열어 ANTHROPIC_API_KEY 와 ACCESS_CODE 를 채운다
+# secrets.toml 을 열어 OPENAI_API_KEY 와 ACCESS_CODE 를 채운다
 
 streamlit run app.py
 ```
 
-API 키는 https://console.anthropic.com 에서 발급한다.
+API 키는 https://platform.openai.com/api-keys 에서 발급하고, **Billing 에서 크레딧을 먼저
+충전**해야 호출이 된다 (충전 전에는 429 `insufficient_quota` 가 뜬다).
 
 ## Streamlit Community Cloud 배포 (무료, 5분)
 
@@ -37,9 +38,10 @@ API 키는 https://console.anthropic.com 에서 발급한다.
 2. https://share.streamlit.io → **New app** → 리포와 `app.py` 선택
 3. **Advanced settings → Secrets** 에 아래를 붙여넣는다:
    ```toml
-   ANTHROPIC_API_KEY = "sk-ant-..."
+   OPENAI_API_KEY = "sk-..."
    ACCESS_CODE = "학회에_공유할_코드"
    ```
+   로컬 `secrets.toml` 은 배포되지 않는다. 여기에 따로 넣어야 한다.
 4. Deploy. URL이 나오면 학회 공지에 코드와 함께 올린다.
 
 ### 접속 코드를 왜 두는가
@@ -50,9 +52,28 @@ Community Cloud 앱은 URL만 알면 누구나 들어온다. API 키가 발제�
 
 ## 비용
 
-Opus 5 기준 채점 1회에 대략 $0.02~0.03. 학회원 30명이 평균 3번씩 돌려도 **$2~3 수준**이다.
-더 줄이고 싶으면 `app.py` 의 `MODEL` 을 `claude-sonnet-5` 로 바꾸면 절반 이하가 되지만,
-채점 품질이 곧 과제 품질이라 이 규모에서 아낄 이유는 크지 않다.
+측정 기준: 고정 시스템 프롬프트 2,892토큰 + 제출물 → 입력 약 4,500토큰,
+출력 약 3,000토큰(추론 토큰 포함).
+
+| 모델 | 회당 | 12명 × 15회 (180회) | 12명 × 7회 (84회) |
+|---|---|---|---|
+| `gpt-5.6-sol` | $0.113 | $20.3 | $9.5 |
+| **`gpt-5.6-terra`** ← 현재 | **$0.056** | **$10.1** | **$4.7** |
+| `gpt-5.6-luna` | $0.023 | $4.1 | $1.9 |
+
+**$15 충전하면 학회원 12명이 각자 15번씩 다 돌려도 남는다.**
+
+구형 `gpt-5.5` / `gpt-5.4` / `gpt-5` 는 쓰지 않는다. 2026-04 에 5.5 가격이 두 배로 오른 뒤
+7월에 5.6 이 나오면서, 구형은 전부 **같은 값에 성능만 낮은** 상태가 됐다.
+(`gpt-5.5` = Sol 과 동일가에 Terminal-Bench 88.0% vs Sol 88.8%, Terra 는 그보다 위인데 값은 절반)
+
+**비용의 약 80%가 출력 토큰이다.** 추론 토큰도 출력으로 과금되므로, 아껴야 하면
+`LIMITS` 로 입력을 조이는 게 아니라 `EFFORT` 를 `medium` 으로 내리는 게 손잡이다.
+내릴 때는 같은 제출물을 2~3번 돌려 점수가 흔들리지 않는지 반드시 확인할 것.
+
+프롬프트 캐싱은 자동이다 (1024토큰 이상 동일 프리픽스). 시스템 프롬프트가 2,892토큰이라
+한 학회원이 연달아 고쳐 낼 때 입력분이 1/10 값으로 떨어지지만, 입력이 전체의 20% 라
+총액에 미치는 영향은 15% 안쪽이다.
 
 ## 채점 기준
 

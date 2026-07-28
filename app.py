@@ -5,7 +5,7 @@ YBIGTA SQL 3주차 과제용. 제출 전 스스로 점검하는 도구이며, �
 
 import json
 
-import anthropic
+import openai
 import streamlit as st
 
 from rubric import (
@@ -20,21 +20,28 @@ from rubric import (
 
 # ── 비용 손잡이 ────────────────────────────────────────────────
 # 모델을 바꾸면 PRICES 의 키만 맞으면 비용 표시도 따라간다.
-MODEL = "claude-opus-5"
+# Terra 를 쓰는 이유: 구형 GPT-5.5 와 값이 절반인데 벤치마크는 위다.
+# 구형(gpt-5.5 / 5.4 / 5)은 같은 값에 성능만 낮으므로 쓸 이유가 없다.
+MODEL = "gpt-5.6-terra"
 
-# 사고 깊이. 채점 품질이 곧 과제 품질이라 기본은 high.
-# 예산이 빠듯하면 모델을 내리기 전에 여기부터 medium 으로 내려보고,
+# 추론 깊이. none / minimal / low / medium / high / xhigh / max
+# 비용의 약 80%가 출력 토큰이고 추론 토큰도 출력으로 과금되므로,
+# 예산을 아껴야 하면 모델을 내리기 전에 여기부터 medium 으로 내려보고
 # 같은 제출물을 2~3번 돌려 점수가 흔들리는지 확인할 것.
 EFFORT = "high"
 
-# $/1M 토큰 — (입력, 캐시쓰기, 캐시읽기, 출력)
+# $/1M 토큰 — (입력, 캐시된 입력, 출력)
+# OpenAI 는 1024토큰 이상 동일 프리픽스를 자동 캐싱한다. 캐시 '쓰기' 추가금은 없다.
 PRICES = {
-    "claude-opus-5": (5.0, 6.25, 0.5, 25.0),
-    "claude-opus-4-8": (5.0, 6.25, 0.5, 25.0),  # Opus 5와 동일가 — 바꿔도 절약 안 됨
-    "claude-sonnet-5": (2.0, 2.5, 0.2, 10.0),  # 2026-08-31 까지 인트로가, 이후 3/15
-    "claude-haiku-4-5": (1.0, 1.25, 0.1, 5.0),
+    "gpt-5.6-sol": (5.0, 0.5, 30.0),
+    "gpt-5.6-terra": (2.5, 0.25, 15.0),
+    "gpt-5.6-luna": (1.0, 0.1, 6.0),
 }
-PRICE_IN, PRICE_CACHE_WRITE, PRICE_CACHE_READ, PRICE_OUT = PRICES[MODEL]
+PRICE_IN, PRICE_CACHED, PRICE_OUT = PRICES[MODEL]
+
+# 추론 토큰도 이 한도를 함께 쓴다. 한도에 걸려 잘리면 추론 토큰 값은 그대로
+# 청구되고 결과는 못 받으므로, 넉넉하게 두는 편이 오히려 싸다.
+MAX_OUTPUT_TOKENS = 12000
 
 MAX_CALLS_PER_SESSION = 20
 LIMITS = {"question": 300, "sql": 4000, "result": 3000, "insight": 3000}
@@ -72,6 +79,15 @@ def gate() -> bool:
 
 
 if not gate():
+    st.stop()
+
+
+if "OPENAI_API_KEY" not in st.secrets:
+    st.error(
+        "OPENAI_API_KEY 가 설정되지 않았습니다.\n\n"
+        '- 로컬: `.streamlit/secrets.toml` 에 `OPENAI_API_KEY = "sk-..."` 한 줄 추가\n'
+        "- Streamlit Cloud: 앱 → Settings → Secrets 에 같은 줄 추가"
+    )
     st.stop()
 
 
@@ -163,41 +179,65 @@ def build_user_message(question: str, sql: str, result: str, insight: str) -> st
 
 
 def grade(question: str, sql: str, result: str, insight: str) -> dict:
-    client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
-    resp = client.messages.create(
+    client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+    # 추론 모델은 Responses API 를 쓰는 쪽이 권장 경로다.
+    # 시스템 프롬프트는 instructions 로 넘겨 입력 맨 앞에 놓는다. 매 호출 동일하므로
+    # (2,892토큰 > 1024토큰) OpenAI 자동 프롬프트 캐싱이 걸린다.
+    resp = client.responses.create(
         model=MODEL,
-        max_tokens=8000,
-        # 시스템 프롬프트는 매 호출 동일하므로 캐싱한다. 한 학회원이 연달아 고쳐 낼 때
-        # (5분 TTL 안에 재호출) 입력 비용이 크게 줄어든다.
-        system=[
-            {"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}
-        ],
-        messages=[
+        instructions=SYSTEM_PROMPT,
+        input=[
             {"role": "user", "content": build_user_message(question, sql, result, insight)}
         ],
-        output_config={
-            "format": {"type": "json_schema", "schema": GRADE_SCHEMA},
-            "effort": EFFORT,
+        reasoning={"effort": EFFORT},
+        text={
+            "format": {
+                "type": "json_schema",
+                "name": "grade",
+                "schema": GRADE_SCHEMA,
+                "strict": True,
+            }
         },
+        max_output_tokens=MAX_OUTPUT_TOKENS,
     )
-    if resp.stop_reason == "refusal":
-        raise RuntimeError("채점기가 이 제출물에 대한 응답을 거절했습니다. 내용을 확인해주세요.")
-    if resp.stop_reason == "max_tokens":
-        raise RuntimeError("응답이 잘렸습니다. 제출물을 조금 줄여서 다시 시도해주세요.")
-    text = next(b.text for b in resp.content if b.type == "text")
-    data = json.loads(text)
+
+    if resp.status == "incomplete":
+        reason = getattr(resp.incomplete_details, "reason", "") or "알 수 없음"
+        if reason == "max_output_tokens":
+            raise RuntimeError("응답이 잘렸습니다. 제출물을 조금 줄여서 다시 시도해주세요.")
+        raise RuntimeError(f"응답이 완료되지 않았습니다 (사유: {reason}).")
+
+    # 거절은 message 항목 안의 content 파트로 온다.
+    for item in resp.output:
+        for part in getattr(item, "content", None) or []:
+            if part.type == "refusal":
+                raise RuntimeError(f"채점기가 응답을 거절했습니다: {part.refusal}")
+
+    data = json.loads(resp.output_text)
     data["_cost"] = call_cost(resp.usage)
     return data
 
 
+def _detail(details, field: str) -> int:
+    """usage 하위 details 는 SDK 버전에 따라 객체이거나 dict 다. 양쪽 다 받는다."""
+    if details is None:
+        return 0
+    if isinstance(details, dict):
+        return int(details.get(field, 0) or 0)
+    return int(getattr(details, field, 0) or 0)
+
+
 def call_cost(u) -> float:
-    """이번 호출의 대략적인 비용($). 캐시 적중분은 싸게 계산된다."""
-    return (
-        getattr(u, "input_tokens", 0) * PRICE_IN
-        + getattr(u, "cache_creation_input_tokens", 0) * PRICE_CACHE_WRITE
-        + getattr(u, "cache_read_input_tokens", 0) * PRICE_CACHE_READ
-        + getattr(u, "output_tokens", 0) * PRICE_OUT
-    ) / 1e6
+    """이번 호출의 대략적인 비용($).
+
+    OpenAI 의 input_tokens 는 캐시 적중분을 **포함한** 총량이므로 빼내서 따로 곱한다.
+    output_tokens 는 추론 토큰을 이미 포함하므로 따로 더하지 않는다.
+    """
+    total_in = int(getattr(u, "input_tokens", 0) or 0)
+    cached = _detail(getattr(u, "input_tokens_details", None), "cached_tokens")
+    fresh_in = max(0, total_in - cached)
+    out = int(getattr(u, "output_tokens", 0) or 0)
+    return (fresh_in * PRICE_IN + cached * PRICE_CACHED + out * PRICE_OUT) / 1e6
 
 
 def total_of(data: dict) -> int:
@@ -234,11 +274,17 @@ if go:
             with st.spinner("채점 중입니다. 20~40초 걸립니다..."):
                 data = grade(question, sql, result, insight)
                 data["_total"] = total_of(data)
-        except anthropic.RateLimitError:
-            st.error("요청이 몰렸습니다. 30초 뒤에 다시 시도해주세요.")
-        except anthropic.APIStatusError as e:
+        except openai.RateLimitError as e:
+            # OpenAI 는 크레딧 소진도 429 로 준다. 문구가 전혀 다르므로 갈라준다.
+            if getattr(e, "code", "") == "insufficient_quota":
+                st.error("발제자의 API 크레딧이 소진되었습니다. 발제자에게 알려주세요.")
+            else:
+                st.error("요청이 몰렸습니다. 30초 뒤에 다시 시도해주세요.")
+        except openai.AuthenticationError:
+            st.error("API 키가 유효하지 않습니다. 발제자에게 알려주세요.")
+        except openai.APIStatusError as e:
             st.error(f"API 오류 ({e.status_code}). 잠시 후 다시 시도해주세요.")
-        except anthropic.APIConnectionError:
+        except openai.APIConnectionError:
             st.error("네트워크 연결에 실패했습니다.")
         except (RuntimeError, json.JSONDecodeError, StopIteration, KeyError, ValueError) as e:
             st.error(f"채점 결과를 읽지 못했습니다: {e}")

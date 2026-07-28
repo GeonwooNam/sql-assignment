@@ -1,2 +1,2 @@
 streamlit>=1.40
-anthropic>=0.80
+openai>=2.0
