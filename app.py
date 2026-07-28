@@ -336,6 +336,19 @@ def call_cost(u) -> float:
     return (fresh_in * PRICE_IN + cached * PRICE_CACHED + out * PRICE_OUT) / 1e6
 
 
+def md_safe(text: str) -> str:
+    """모델이 쓴 한국어 문장을 마크다운 렌더러가 삼키지 않게 한다.
+
+    한국어 분석 글은 범위를 물결표로 쓴다 ("1~5일 지연", "10~20% 구간").
+    그런데 마크다운에서 ~텍스트~ 는 취소선이라, 한 문장에 물결표가 두 번 나오면
+    그 사이가 통째로 그어지고 물결표 자체도 사라진다. 실제로 그렇게 렌더됐다.
+
+    달러 기호도 두 개가 만나면 LaTeX 수식으로 해석된다 (브라질 통화 R$).
+    둘 다 이스케이프한다. 백틱·굵게 표기는 모델이 의도해서 쓰면 보기 좋으므로 남긴다.
+    """
+    return text.replace("~", "\\~").replace("$", "\\$")
+
+
 def total_of(data: dict) -> int:
     """총점은 모델이 아니라 여기서 계산한다. 항목 점수는 만점 범위로 자른다."""
     return sum(max(0, min(mx, int(data[key]["score"]))) for key, _, mx in DIMENSIONS)
@@ -542,7 +555,7 @@ if data:
         st.metric(f"합계 / {TOTAL_MAX}", f"{total}", delta=delta)
     with col_b:
         st.progress(total / TOTAL_MAX)
-        st.write(f"**{data['one_line']}**")
+        st.write(f"**{md_safe(data['one_line'])}**")
         if total >= RECOMMEND_LINE:
             st.caption(f"✅ 제출 권장선({RECOMMEND_LINE}점)을 넘었습니다.")
         else:
@@ -559,10 +572,10 @@ if data:
             st.markdown(f"**{label}**  ·  {score} / {mx}  ·  {d['level']}단계")
         with bar:
             st.progress(score / mx)
-        st.caption(d["reason"])
+        st.caption(md_safe(d["reason"]))
         if d.get("evidence"):
             with st.expander(f"{label} — 판정 근거로 본 부분"):
-                st.markdown(f"> {d['evidence']}")
+                st.markdown(f"> {md_safe(d['evidence'])}")
         st.write("")
 
     # query_translation · query_check · generic_check 는 화면에 띄우지 않는다.
@@ -575,15 +588,15 @@ if data:
     # 발제자는 CSV·HTML·발제자 패널에서 확인할 수 있다.
 
     st.subheader("잘한 점")
-    st.success(data["good"])
+    st.success(md_safe(data["good"]))
 
     st.subheader("보완할 점")
-    st.warning(data["feedback"])
+    st.warning(md_safe(data["feedback"]))
 
     if data.get("next_questions"):
         st.subheader("한 걸음 더")
         for q in data["next_questions"]:
-            st.markdown(f"- {q}")
+            st.markdown(f"- {md_safe(q)}")
 
     if len(st.session_state.history) > 1:
         with st.expander("점수 변화"):
