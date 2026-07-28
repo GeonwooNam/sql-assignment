@@ -80,6 +80,8 @@ st.markdown(
         max-height: 32rem;
         line-height: 1.5;
       }
+      /* 질문은 한 문장이라 두 줄 높이에서 시작해 필요한 만큼만 늘어나게 */
+      .st-key-question textarea { min-height: 3.6rem; max-height: 12rem; }
       /* 쿼리와 인사이트는 길어지기 쉬우므로 처음부터 넉넉하게, 상한도 높게 */
       .st-key-sql textarea    { min-height: 13rem; max-height: 44rem; }
       .st-key-insight textarea { min-height: 13rem; max-height: 44rem; }
@@ -199,8 +201,11 @@ name = st.text_input(
     max_chars=LIMITS["name"],
 )
 
-question = st.text_input(
+# 한 문장이지만 길어질 수 있어 text_area 로 둔다. text_input 은 한 줄이라 늘어나지 않는다.
+# 하한을 두 줄 높이로 낮게 잡아, 짧게 쓰면 한 줄 입력처럼 보인다.
+question = st.text_area(
     "2. 무엇을 알아보려 했나요?",
+    key="question",
     placeholder="예: 배송이 예상보다 늦은 주문은 리뷰 점수가 실제로 더 낮은가?",
     max_chars=LIMITS["question"],
 )
