@@ -73,22 +73,22 @@ st.set_page_config(page_title="Olist 인사이트 셀프체크", page_icon="🔎
 st.markdown(
     """
     <style>
+      /* 늘어나는 동작만 여기서 정한다. 높이 하한·상한은 아래 위젯별 규칙이 전담한다.
+         (여기에 min-height 를 두면 특정성이 (0,1,2)라 (0,1,1)인 .st-key-* 규칙을
+          이겨버려서 위젯별 높이가 먹지 않는다. 한 번 그 함정에 빠졌다.) */
       div[data-testid="stTextArea"] textarea {
         field-sizing: content;
         height: auto !important;
-        min-height: 9rem;
-        max-height: 32rem;
         line-height: 1.5;
       }
-      /* 질문은 딱 2줄에서 시작해 필요한 만큼만 늘어나게.
-         rem 로 어림하면 글꼴·여백에 따라 어긋나므로 lh(줄높이 단위)로 2줄을 지정한다.
-         앞의 rem 값은 lh 를 모르는 브라우저용 대비값이다 (뒤 선언이 무시되고 이게 남는다). */
-      .st-key-question textarea { min-height: 3rem; max-height: 12rem; }
-      .st-key-question textarea { min-height: calc(2lh + 1.4rem); }
+      /* 질문은 딱 2줄에서 시작. rem 로 어림하면 글꼴·여백에 따라 어긋나므로
+         lh(줄높이 단위)로 2줄을 지정한다. 앞 선언은 lh 미지원 브라우저용 대비값. */
+      .st-key-question textarea { min-height: 3rem !important; max-height: 12rem !important; }
+      .st-key-question textarea { min-height: calc(2lh + 1rem) !important; }
       /* 쿼리와 인사이트는 길어지기 쉬우므로 처음부터 넉넉하게, 상한도 높게 */
-      .st-key-sql textarea    { min-height: 13rem; max-height: 44rem; }
-      .st-key-insight textarea { min-height: 13rem; max-height: 44rem; }
-      .st-key-result textarea  { min-height: 9rem;  max-height: 32rem; }
+      .st-key-sql textarea     { min-height: 13rem !important; max-height: 44rem !important; }
+      .st-key-insight textarea { min-height: 13rem !important; max-height: 44rem !important; }
+      .st-key-result textarea  { min-height: 9rem  !important; max-height: 32rem !important; }
       /* 쿼리·결과는 표와 코드라 고정폭 글꼴이 읽기 쉽다 */
       .st-key-sql textarea, .st-key-result textarea {
         font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
