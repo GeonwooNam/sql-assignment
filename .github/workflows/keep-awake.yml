@@ -1,0 +1,65 @@
+# Streamlit Community Cloud 앱이 잠들지 않게 유지한다.
+#
+# 무료 티어는 트래픽이 12시간 없으면 앱을 잠재운다. 학회원이 새벽에 처음 열면
+# "get this app back up" 화면을 보고 30초를 기다려야 한다.
+#
+# 주의: UptimeRobot 같은 단순 GET 핑거는 통하지 않는다. 잠든 앱도 GET 에는 200 을
+# 돌려주기 때문에 트래픽으로 집계되지 않는다. 실제 브라우저로 접속해서 웹소켓
+# 세션이 붙어야 한다. 그래서 Playwright 를 쓴다.
+#
+# 설정: 리포 Settings → Secrets and variables → Actions → New repository secret
+#       이름 APP_URL, 값은 배포된 앱 주소 (예: https://sql-assignment.streamlit.app)
+
+name: keep-awake
+
+on:
+  schedule:
+    # 12시간 임계보다 넉넉하게 6시간마다. GitHub 크론은 지연될 수 있어 여유를 둔다.
+    - cron: "0 */6 * * *"
+  workflow_dispatch: # 수동 실행 (공지 직전에 한 번 눌러두면 좋다)
+
+jobs:
+  wake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Playwright 설치
+        run: |
+          pip install --quiet playwright
+          playwright install --with-deps chromium
+
+      - name: 앱 깨우기
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          if [ -z "$APP_URL" ]; then
+            echo "::error::APP_URL 시크릿이 설정되지 않았습니다."
+            exit 1
+          fi
+          python - <<'PY'
+          import os
+          from playwright.sync_api import sync_playwright
+
+          url = os.environ["APP_URL"]
+          with sync_playwright() as p:
+              browser = p.chromium.launch()
+              page = browser.new_page()
+              page.goto(url, timeout=60_000)
+
+              # 잠들어 있으면 깨우기 버튼이 뜬다. 없으면 이미 깨어 있는 것.
+              btn = page.get_by_text("get this app back up", exact=False)
+              if btn.count():
+                  btn.first.click()
+                  print("잠들어 있었음 → 깨우기 클릭")
+              else:
+                  print("이미 깨어 있음")
+
+              # 웹소켓 세션이 실제로 붙어야 트래픽으로 집계된다. 넉넉히 머문다.
+              page.wait_for_timeout(30_000)
+              print("최종 제목:", page.title())
+              browser.close()
+          PY

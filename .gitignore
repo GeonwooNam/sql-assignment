@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 .venv/
 .DS_Store
+
+# 학회원 제출 기록. 공개 리포이므로 절대 올리지 않는다.
+submissions.jsonl

@@ -4,6 +4,9 @@ YBIGTA SQL 3주차 과제용. 제출 전 스스로 점검하는 도구이며, �
 """
 
 import json
+import urllib.request
+from datetime import datetime
+from pathlib import Path
 
 import openai
 import streamlit as st
@@ -44,13 +47,22 @@ PRICE_IN, PRICE_CACHED, PRICE_OUT = PRICES[MODEL]
 MAX_OUTPUT_TOKENS = 12000
 
 MAX_CALLS_PER_SESSION = 20
-LIMITS = {"question": 300, "sql": 4000, "result": 3000, "insight": 3000}
+
+# 제출 로그. Streamlit Cloud 에서는 프로세스가 하나라 여러 학회원의 제출이 이 파일에
+# 함께 쌓이지만, **재배포·리부트 때 사라진다.** 영구 보존이 필요하면 secrets 에
+# LOG_WEBHOOK_URL 을 넣어 Google Sheets 등으로 함께 흘려보낸다. (README 참고)
+LOG_PATH = Path(__file__).parent / "submissions.jsonl"
+
+# 충전액. 발제자 패널의 예산 소진율 표시에만 쓴다. 학회원에게는 보이지 않는다.
+BUDGET_USD = 15.0
+LIMITS = {"name": 20, "question": 300, "sql": 4000, "result": 3000, "insight": 3000}
 
 st.set_page_config(page_title="Olist 인사이트 셀프체크", page_icon="🔎", layout="centered")
 
 
 # ── 상태 ────────────────────────────────────────────────────────
 st.session_state.setdefault("unlocked", False)
+st.session_state.setdefault("admin_ok", False)
 st.session_state.setdefault("calls", 0)
 st.session_state.setdefault("spent", 0.0)
 st.session_state.setdefault("history", [])
@@ -116,12 +128,19 @@ with st.sidebar:
         st.code(SCHEMA_BLOCK, language="text")
     st.divider()
     st.caption(f"이번 세션 채점 횟수: {st.session_state.calls} / {MAX_CALLS_PER_SESSION}")
-    if st.session_state.calls:
-        spent = st.session_state.spent
-        st.caption(
-            f"API 사용액: ${spent:.3f} (회당 평균 ${spent / st.session_state.calls:.3f})"
-        )
     st.caption(f"모델: `{MODEL}` · effort `{EFFORT}`")
+    # API 사용액은 일부러 학회원에게 보여주지 않는다. 돈이 보이면 재시도를 아끼게 되는데,
+    # 이 도구의 가치는 고쳐서 다시 돌리는 반복에 있다. 금액은 발제자 패널에만 띄운다.
+
+    # 발제자만 제출 로그를 본다. ADMIN_CODE 를 설정하지 않으면 패널 자체가 안 뜬다.
+    admin_code = st.secrets.get("ADMIN_CODE", "")
+    if admin_code:
+        st.divider()
+        entered = st.text_input("발제자 코드", type="password", key="admin_input")
+        if entered:
+            st.session_state.admin_ok = entered.strip() == admin_code
+            if not st.session_state.admin_ok:
+                st.error("코드가 맞지 않습니다.")
 
 
 # ── 입력 ────────────────────────────────────────────────────────
@@ -131,25 +150,32 @@ st.caption(
     "한 단계 올리려면 뭘 해야 하는지 알려줍니다."
 )
 
+name = st.text_input(
+    "1. 이름",
+    placeholder="예: 남건우",
+    max_chars=LIMITS["name"],
+)
+st.caption("채점 결과 화면에 표시하는 용도입니다. API로 전송되지 않습니다.")
+
 question = st.text_input(
-    "1. 무엇을 알아보려 했나요? (한 문장)",
+    "2. 무엇을 알아보려 했나요? (한 문장)",
     placeholder="예: 배송이 예상보다 늦은 주문은 리뷰 점수가 실제로 더 낮은가?",
     max_chars=LIMITS["question"],
 )
 st.caption("이 질문과 쿼리가 정말 같은 것을 묻는지가 배점이 가장 큰 항목(30점)입니다.")
 
 sql = st.text_area(
-    "2. 작성한 쿼리",
+    "3. 작성한 쿼리",
     height=200,
     placeholder="SELECT c.customer_state, AVG(...) \nFROM olist_raw.orders AS o\nJOIN ...",
 )
 result = st.text_area(
-    "3. 쿼리 실행 결과",
+    "4. 쿼리 실행 결과",
     height=140,
     placeholder="BigQuery 결과 표를 그대로 복사해서 붙여넣으세요. 행이 많으면 상위 10~20행이면 충분합니다.",
 )
 insight = st.text_area(
-    "4. 도출한 인사이트",
+    "5. 도출한 인사이트",
     height=200,
     placeholder=(
         "이 수치에서 무엇을 발견했는지, 왜 그렇다고 보는지, "
@@ -160,7 +186,27 @@ insight = st.text_area(
     ),
 )
 
-go = st.button("채점하기", type="primary", use_container_width=True)
+# 다섯 항목 전부 채워야 버튼이 열린다. 하나라도 비면 어느 항목인지 이름으로 알려준다.
+# 클릭 후 경고를 띄우는 대신 버튼을 잠그는 쪽을 택했다 — 빈 채로 호출되면
+# 채점기가 근거 사슬을 판정할 수 없어 API 비용만 나가고 결과는 무의미하다.
+FIELDS = (
+    ("이름", name),
+    ("질문", question),
+    ("쿼리", sql),
+    ("실행 결과", result),
+    ("인사이트", insight),
+)
+missing = [label for label, value in FIELDS if not value.strip()]
+
+go = st.button(
+    "채점하기",
+    type="primary",
+    width="stretch",
+    disabled=bool(missing),
+)
+if missing:
+    st.caption(f"아직 비어 있는 항목: **{', '.join(missing)}** — 다 채우면 버튼이 열립니다.")
+st.caption("제출한 내용과 점수는 발제자가 확인할 수 있도록 기록됩니다.")
 
 
 # ── 채점 ────────────────────────────────────────────────────────
@@ -245,17 +291,68 @@ def total_of(data: dict) -> int:
     return sum(max(0, min(mx, int(data[key]["score"]))) for key, _, mx in DIMENSIONS)
 
 
+def log_submission(
+    name: str, question: str, sql: str, result: str, insight: str, data: dict
+) -> None:
+    """제출물 한 건을 기록한다. 기록이 실패해도 채점 결과는 그대로 보여준다."""
+    row = {
+        "time": datetime.now().isoformat(timespec="seconds"),
+        "name": name.strip(),
+        "total": data["_total"],
+        **{key: data[key]["score"] for key, _, _ in DIMENSIONS},
+        "question": question.strip(),
+        "sql": sql.strip(),
+        "query_result": result.strip(),
+        "insight": insight.strip(),
+        "one_line": data.get("one_line", ""),
+        "query_translation": data.get("query_translation", ""),
+        "cost_usd": round(data.get("_cost", 0.0), 5),
+    }
+    line = json.dumps(row, ensure_ascii=False)
+
+    try:
+        with open(LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+    except OSError:
+        pass  # 쓰기 불가 환경이어도 채점은 계속된다
+
+    url = st.secrets.get("LOG_WEBHOOK_URL", "")
+    if url:
+        try:
+            req = urllib.request.Request(
+                url,
+                data=line.encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            urllib.request.urlopen(req, timeout=5).close()
+        except Exception:  # noqa: BLE001 - 기록 실패가 채점을 막아서는 안 된다
+            pass
+
+
+def read_log() -> list[dict]:
+    """기록된 제출을 최신순으로 읽는다. 발제자 패널에서만 쓴다."""
+    if not LOG_PATH.exists():
+        return []
+    rows = []
+    for line in LOG_PATH.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            rows.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return list(reversed(rows))
+
+
 if go:
     problems = []
-    if not question.strip():
-        problems.append("알아보려던 질문을 한 문장으로 적어주세요. 배점이 가장 큰 항목의 기준입니다.")
-    if not sql.strip():
-        problems.append("쿼리를 입력해주세요.")
-    if not insight.strip():
-        problems.append("인사이트를 입력해주세요.")
-    if not result.strip():
-        problems.append("쿼리 실행 결과를 붙여넣어야 근거 사슬을 볼 수 있습니다.")
+    # 버튼이 잠겨 있으므로 정상 경로에서는 도달하지 않는다. 안전망으로만 둔다.
+    if missing:
+        problems.append(f"비어 있는 항목이 있습니다: {', '.join(missing)}")
     for key, field in (
+        ("name", name),
         ("question", question),
         ("sql", sql),
         ("result", result),
@@ -289,16 +386,24 @@ if go:
         except (RuntimeError, json.JSONDecodeError, StopIteration, KeyError, ValueError) as e:
             st.error(f"채점 결과를 읽지 못했습니다: {e}")
         else:
+            data["_name"] = name.strip()
             st.session_state.calls += 1
             st.session_state.spent += data.get("_cost", 0.0)
             st.session_state.history.append(data["_total"])
             st.session_state.latest = data
+            log_submission(name, question, sql, result, insight, data)
+            # 사이드바는 스크립트 위쪽에서 이미 그려졌으므로 방금 늘린 횟수·사용액이
+            # 반영되지 않는다. 다시 돌려야 사이드바가 최신 상태로 보인다.
+            st.rerun()
 
 
 # ── 결과 ────────────────────────────────────────────────────────
 data = st.session_state.get("latest")
 if data:
     st.divider()
+
+    if data.get("_name"):
+        st.markdown(f"### {data['_name']} 님의 채점 결과")
 
     total = data["_total"]
     col_a, col_b = st.columns([1, 3])
@@ -350,3 +455,43 @@ if data:
     if len(st.session_state.history) > 1:
         with st.expander("점수 변화"):
             st.line_chart(st.session_state.history)
+
+
+# ── 제출 로그 (발제자용) ────────────────────────────────────────
+if st.session_state.admin_ok:
+    st.divider()
+    rows = read_log()
+    st.subheader(f"제출 로그 — {len(rows)}건")
+
+    spent = sum(float(r.get("cost_usd", 0) or 0) for r in rows)
+    left = max(0.0, BUDGET_USD - spent)
+    per_call = spent / len(rows) if rows else 0.0
+    a, b, c = st.columns(3)
+    a.metric("사용액", f"${spent:.2f}", help=f"충전액 ${BUDGET_USD:.0f} 기준")
+    b.metric("남은 예산", f"${left:.2f}", f"-{spent / BUDGET_USD * 100:.1f}%", delta_color="off")
+    c.metric("회당 평균", f"${per_call:.4f}" if rows else "—",
+             help="이 값으로 실제 회당 비용을 확인할 것. 예상은 $0.056.")
+    st.progress(min(1.0, spent / BUDGET_USD))
+    if rows:
+        st.caption(
+            f"이 속도면 남은 예산으로 약 {int(left / per_call):,}회 더 가능합니다. "
+            "단 아래 로그가 초기화되면 이 합계도 함께 초기화되므로, "
+            "정확한 잔액은 OpenAI 대시보드가 기준입니다."
+        )
+
+    if not rows:
+        st.info("아직 이 인스턴스에 기록된 제출이 없습니다.")
+    else:
+        st.download_button(
+            "전체 내려받기 (JSONL)",
+            data=LOG_PATH.read_bytes(),
+            file_name="submissions.jsonl",
+            mime="application/x-ndjson",
+        )
+        st.dataframe(rows, width="stretch", hide_index=True)
+        st.caption("셀을 클릭하면 전체 내용이 펼쳐집니다. 표 우측 상단에서 CSV로도 받을 수 있습니다.")
+    st.warning(
+        "이 파일은 **재배포·리부트 때 사라집니다.** 영구 보존이 필요하면 "
+        "`LOG_WEBHOOK_URL` 시크릿을 설정하세요 (README 참고). "
+        + ("현재 설정됨 ✅" if st.secrets.get("LOG_WEBHOOK_URL") else "현재 설정 안 됨 ⚠️")
+    )
