@@ -314,6 +314,7 @@ def log_submission(
         "insight": insight.strip(),
         "one_line": data.get("one_line", ""),
         "query_translation": data.get("query_translation", ""),
+        "generic_check": data.get("generic_check", ""),
         "cost_usd": round(data.get("_cost", 0.0), 5),
     }
     line = json.dumps(row, ensure_ascii=False)
@@ -345,7 +346,7 @@ def _log_fields(rows: list[dict]) -> list[str]:
         "time", "name", "total",
         *[k for k, _, _ in DIMENSIONS],
         "question", "sql", "query_result", "insight",
-        "one_line", "query_translation", "cost_usd",
+        "one_line", "query_translation", "generic_check", "cost_usd",
     ]
     seen = {k for r in rows for k in r}
     return [k for k in preferred if k in seen] + sorted(seen - set(preferred))
@@ -521,6 +522,14 @@ if data:
             with st.expander(f"{label} — 판정 근거로 본 부분"):
                 st.markdown(f"> {d['evidence']}")
         st.write("")
+
+    if data.get("generic_check"):
+        st.subheader("이 글이 정말 이 데이터를 보고 쓴 것인가요?")
+        st.caption(
+            "① 숫자가 반대로 나왔어도 그대로 쓸 수 있는 문장이 있는지 "
+            "② 이 데이터를 실제로 만진 증거가 있는지 — 4단계는 이 검사를 통과해야 나옵니다."
+        )
+        st.warning(data["generic_check"])
 
     st.subheader("질문과 쿼리가 같은 것을 묻고 있나요?")
     st.markdown("**이 쿼리가 실제로 세고 있는 것**")

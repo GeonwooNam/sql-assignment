@@ -167,6 +167,28 @@
   <strong>어떤 질문을 세웠는가</strong>, 그리고 <strong>그 질문에 답하려고 무엇을 고민했는가.</strong></p>
 </div>
 
+<div class="callout">
+  <p><strong>AI를 써도 됩니다. 대신 알아두세요.</strong>
+  <strong>AI가 프롬프트 한 번으로 내놓는 결과물은 어느 항목에서도 3단계까지입니다.</strong>
+  글이 매끄럽고 용어가 정확한 것에는 점수를 주지 않습니다 &mdash; 그건 이제 전원이 공짜로 얻는
+  하한선이기 때문입니다. <strong>4단계는 여러분이 데이터를 보고 판단을 개입시킨 흔적이 있을 때만</strong>
+  나옵니다. 채점기가 두 가지를 검사합니다.</p>
+  <table style="margin:2mm 0 0">
+    <tr><td style="width:52mm"><strong>숫자를 반대로 바꿔도<br>그 문장이 성립하는가?</strong></td>
+        <td>성립하면 이 데이터를 보고 쓴 글이 아닙니다.
+            &ldquo;A가 높다, 따라서 A에 집중해야 한다&rdquo;는 높든 낮든 쓸 수 있는 말입니다.
+            반대로 &ldquo;1&ndash;5일 지연은 이미 평균을 밑돌지만 급락은 6일부터다&rdquo;는
+            이 분포를 봐야 나오는 말입니다</td></tr>
+    <tr><td><strong>Olist가 아닌 다른 이커머스<br>데이터여도 성립하는가?</strong></td>
+        <td>그렇다면 이 데이터를 만진 증거가 없는 것입니다. 특정 카테고리·특정 주,
+            구체적 임계값과 그 근거, 표본이 적어 뺀 것, 처음 시도가 왜 안 됐는지 &mdash;
+            이런 것이 증거입니다</td></tr>
+  </table>
+  <p style="margin-top:2mm"><strong>그래서 권하는 방법:</strong> AI의 첫 답을 그대로 내지 마세요.
+  나온 결과를 보고 &ldquo;이건 왜 이렇지?&rdquo;를 한 번 더 물어서 질문을 좁히는 것,
+  그게 이 과제에서 재려는 능력입니다.</p>
+</div>
+
 <h2><span class="num">0</span> 제출물과 배점</h2>
 
 <p>네 가지를 제출합니다. 앞의 세 개가 서로 어긋나면 마지막이 아무리 좋아도 분석이 성립하지 않습니다.</p>
@@ -211,8 +233,9 @@
   <tr><td class="c"><span class="lv l3">3</span></td><td class="pt">12–16</td>
       <td><strong>대상 · 비교축 · 판단 기준이 특정됨.</strong> 답이 나오면 무엇을 알게 되는지가 분명함</td></tr>
   <tr><td class="c"><span class="lv l4">4</span></td><td class="pt">17–20</td>
-      <td>위에 더해 <strong>답이 어느 쪽으로 나와도 의미가 있는 질문.</strong>
-          통념을 검증하거나, 반례가 있을 만한 곳을 찌름</td></tr>
+      <td>위에 더해 <strong>답이 어느 쪽으로 나와도 의미가 있고, 데이터를 한 번 본 뒤에야 나올 수 있는 질문.</strong>
+          특정 카테고리·구간·세그먼트를 지목해 통념의 반례를 찌름.
+          데이터를 안 보고도 쓸 수 있는 질문은 3단계까지</td></tr>
 </table>
 
 <h3>같은 주제, 네 단계의 질문</h3>
@@ -249,8 +272,9 @@ JOIN을 더 붙인다고, 윈도우 함수를 쓴다고 점수가 오르지 않�
   <tr><td class="c"><span class="lv l3">3</span></td><td class="pt">14–19</td>
       <td>아래 판단 지점 중 <strong>둘 이상</strong>을 의도적으로 처리함</td></tr>
   <tr><td class="c"><span class="lv l4">4</span></td><td class="pt">20–25</td>
-      <td>위에 더해 <strong>왜 그렇게 선택했는지</strong> 인사이트나 주석에 밝힘.
-          다른 선택을 했다면 결과가 어떻게 달라지는지까지 쓰면 확실한 4단계</td></tr>
+      <td>위에 더해 <strong>왜 그렇게 선택했는지</strong> 와 <strong>그 선택 때문에 무엇이 보이지 않게 되는지</strong>(잃은 것)를 함께 밝힘.
+          예: &ldquo;취소 건을 뺐으므로 취소가 잦은 판매자의 문제는 이 분석에 안 나타난다&rdquo;.
+          이유만 있고 대가가 없으면 3단계</td></tr>
 </table>
 
 <h3>다섯 개의 판단 지점</h3>
@@ -354,7 +378,8 @@ JOIN을 더 붙인다고, 윈도우 함수를 쓴다고 점수가 오르지 않�
   <tr><td class="c"><span class="lv l3">3</span></td><td class="pt">8–10</td>
       <td>가설이 데이터 특성이나 이커머스 도메인 맥락과 연결됨</td></tr>
   <tr><td class="c"><span class="lv l4">4</span></td><td class="pt">11–12</td>
-      <td>인과를 단정하지 않고, 이 해석이 <strong>틀릴 수 있는 조건</strong>을 함께 밝힘</td></tr>
+      <td>인과를 단정하지 않고, 이 해석이 <strong>틀릴 수 있는 조건</strong>을 함께 밝힘.
+          <strong>숫자가 반대로 나왔어도 그대로 쓸 수 있는 문장뿐이면 2단계 이하</strong></td></tr>
 </table>
 
 <h2><span class="num">6</span> 액션 제안 <span class="pts">8점</span></h2>
@@ -366,7 +391,7 @@ JOIN을 더 붙인다고, 윈도우 함수를 쓴다고 점수가 오르지 않�
   <tr><td class="c"><span class="lv l2">2</span></td><td class="pt">3–5</td>
       <td>방향은 있으나 대상·기준이 불명확</td></tr>
   <tr><td class="c"><span class="lv l3">3</span></td><td class="pt">6–8</td>
-      <td>대상·기준·확인 방법이 구체적</td></tr>
+      <td>대상·기준·확인 방법이 구체적이고, <strong>이번에 발견한 숫자가 달랐다면 다른 액션이 나왔을 것</strong>임이 분명함</td></tr>
 </table>
 
 <table>
