@@ -62,6 +62,38 @@ LIMITS = {"name": 20, "question": 300, "sql": 4000, "result": 3000, "insight": 3
 
 st.set_page_config(page_title="Olist 인사이트 셀프체크", page_icon="🔎", layout="centered")
 
+# 입력창이 내용에 따라 늘어나게 한다. Streamlit 의 height 는 고정값이라
+# 긴 쿼리·인사이트를 쓸 때 좁은 창 안에서 스크롤하며 작성하게 되어 불편하다.
+#
+# field-sizing: content 가 내용만큼 늘려주고, min/max-height 로 하한과 상한을 잡는다.
+# 상한에 닿으면 그때부터 스크롤이므로 페이지가 끝없이 길어지지는 않는다.
+# 이 속성을 모르는 구형 브라우저에서는 min-height 로 고정되어 예전과 같이 동작한다.
+#
+# 위젯별 하한은 key 로 구분한다 (Streamlit 이 컨테이너에 st-key-<key> 클래스를 붙인다).
+st.markdown(
+    """
+    <style>
+      div[data-testid="stTextArea"] textarea {
+        field-sizing: content;
+        height: auto !important;
+        min-height: 9rem;
+        max-height: 32rem;
+        line-height: 1.5;
+      }
+      /* 쿼리와 인사이트는 길어지기 쉬우므로 처음부터 넉넉하게, 상한도 높게 */
+      .st-key-sql textarea    { min-height: 13rem; max-height: 44rem; }
+      .st-key-insight textarea { min-height: 13rem; max-height: 44rem; }
+      .st-key-result textarea  { min-height: 9rem;  max-height: 32rem; }
+      /* 쿼리·결과는 표와 코드라 고정폭 글꼴이 읽기 쉽다 */
+      .st-key-sql textarea, .st-key-result textarea {
+        font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+        font-size: 0.86rem;
+      }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 # ── 상태 ────────────────────────────────────────────────────────
 st.session_state.setdefault("unlocked", False)
@@ -173,19 +205,21 @@ question = st.text_input(
     max_chars=LIMITS["question"],
 )
 
+# height 는 주지 않는다. 위 CSS 의 min/max-height 가 하한과 상한을 맡고,
+# 그 사이에서는 입력 내용에 따라 창이 늘어난다.
 sql = st.text_area(
     "3. 작성한 쿼리",
-    height=200,
+    key="sql",
     placeholder="SELECT c.customer_state, AVG(...) \nFROM olist_raw.orders AS o\nJOIN ...",
 )
 result = st.text_area(
     "4. 쿼리 실행 결과",
-    height=140,
+    key="result",
     placeholder="BigQuery 결과 표를 그대로 복사해서 붙여넣으세요. 행이 많으면 상위 10~20행이면 충분합니다.",
 )
 insight = st.text_area(
     "5. 도출한 인사이트",
-    height=200,
+    key="insight",
     placeholder=(
         "이 수치에서 무엇을 발견했는지, 왜 그렇다고 보는지, "
         "그래서 무엇을 하자는 것인지 써주세요.\n\n"
