@@ -565,18 +565,14 @@ if data:
                 st.markdown(f"> {d['evidence']}")
         st.write("")
 
-    if data.get("generic_check"):
-        st.subheader("이 글이 정말 이 데이터를 보고 쓴 것인가요?")
-        st.caption(
-            "① 숫자가 반대로 나왔어도 그대로 쓸 수 있는 문장이 있는지 "
-            "② 이 데이터를 실제로 만진 증거가 있는지 — 4단계는 이 검사를 통과해야 나옵니다."
-        )
-        st.warning(data["generic_check"])
-
-    st.subheader("질문과 쿼리가 같은 것을 묻고 있나요?")
-    st.markdown("**이 쿼리가 실제로 세고 있는 것**")
-    st.code(data["query_translation"], language="text", wrap_lines=True)
-    st.info(data["query_check"])
+    # query_translation · query_check · generic_check 는 화면에 띄우지 않는다.
+    # 정합성은 6점짜리 하한선 항목인데 결과 화면의 절반을 차지해 비중이 어긋났다.
+    #
+    # 단 스키마와 프롬프트에서는 빼지 않았다. 이 세 필드는 표시용이 아니라 채점 장치다.
+    #   - query_translation: 채점 전에 쿼리를 문장으로 옮겨 질문과 대조하는 강제 단계
+    #   - generic_check: AI 판별 두 검사. 4단계 개방 여부를 여기서 가른다
+    # 화면에서 빼도 채점 품질은 그대로이고, 제출 로그에는 계속 기록되므로
+    # 발제자는 CSV·HTML·발제자 패널에서 확인할 수 있다.
 
     st.subheader("잘한 점")
     st.success(data["good"])
