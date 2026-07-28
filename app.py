@@ -81,10 +81,10 @@ st.markdown(
         height: auto !important;
         line-height: 1.5;
       }
-      /* 질문은 딱 2줄에서 시작. rem 로 어림하면 글꼴·여백에 따라 어긋나므로
-         lh(줄높이 단위)로 2줄을 지정한다. 앞 선언은 lh 미지원 브라우저용 대비값. */
-      .st-key-question textarea { min-height: 3rem !important; max-height: 12rem !important; }
-      .st-key-question textarea { min-height: calc(2lh + 1rem) !important; }
+      /* 질문은 딱 1줄에서 시작해 길어지면 늘어난다. rem 로 어림하면 글꼴·여백에 따라
+         어긋나므로 lh(줄높이 단위)로 1줄을 지정한다. 앞 선언은 lh 미지원 브라우저용 대비값. */
+      .st-key-question textarea { min-height: 2.4rem !important; max-height: 12rem !important; }
+      .st-key-question textarea { min-height: calc(1lh + 1rem) !important; }
       /* 쿼리와 인사이트는 길어지기 쉬우므로 처음부터 넉넉하게, 상한도 높게 */
       .st-key-sql textarea     { min-height: 13rem !important; max-height: 44rem !important; }
       .st-key-insight textarea { min-height: 13rem !important; max-height: 44rem !important; }
