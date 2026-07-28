@@ -152,7 +152,6 @@ st.caption(
 
 name = st.text_input(
     "1. 이름",
-    placeholder="예: 남건우",
     max_chars=LIMITS["name"],
 )
 st.caption("채점 결과 화면에 표시하는 용도입니다. API로 전송되지 않습니다.")
