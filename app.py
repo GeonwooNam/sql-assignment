@@ -619,7 +619,21 @@ if data:
 if st.session_state.admin_ok:
     st.divider()
     rows = read_log()
-    st.subheader(f"제출 로그 — {len(rows)}건")
+
+    head, refresh = st.columns([4, 1])
+    with head:
+        st.subheader(f"제출 로그 — {len(rows)}건")
+    with refresh:
+        # 로그는 매 렌더마다 파일에서 새로 읽는다. 다만 Streamlit 은 상호작용이
+        # 있어야 다시 그리므로, 새 제출을 보려면 rerun 을 일으킬 계기가 필요하다.
+        st.button("🔄 새로고침", width="stretch", key="reload_log")
+
+    latest = rows[0].get("time", "") if rows else ""
+    st.caption(
+        f"확인 시각 {datetime.now().strftime('%H:%M:%S')}"
+        + (f" · 마지막 제출 {latest.replace('T', ' ')}" if latest else "")
+        + " · 새 제출이 들어왔는지 보려면 새로고침을 누르세요."
+    )
 
     spent = sum(float(r.get("cost_usd", 0) or 0) for r in rows)
     left = max(0.0, BUDGET_USD - spent)
