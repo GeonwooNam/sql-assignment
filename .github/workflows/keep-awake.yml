@@ -52,7 +52,8 @@ jobs:
 
               # 잠들어 있으면 깨우기 버튼이 뜬다. 없으면 이미 깨어 있는 것.
               btn = page.get_by_text("get this app back up", exact=False)
-              if btn.count():
+              woke = bool(btn.count())
+              if woke:
                   btn.first.click()
                   print("잠들어 있었음 → 깨우기 클릭")
               else:
@@ -61,5 +62,19 @@ jobs:
               # 웹소켓 세션이 실제로 붙어야 트래픽으로 집계된다. 넉넉히 머문다.
               page.wait_for_timeout(30_000)
               print("최종 제목:", page.title())
+
+              # 깨우기 경로는 앱이 실제로 잠들었을 때만 실행되므로 평소에는 시험되지 않는다.
+              # Streamlit 이 버튼 문구를 바꾸면 버튼을 못 찾고 "이미 깨어 있음"으로 빠져
+              # 실패인데 success 로 끝난다. 조용히 망가지는 걸 막으려고 끝에서 확인한다.
+              body = page.inner_text("body")[:600].lower()
+              asleep = ["get this app back up", "has gone to sleep", "app is sleeping"]
+              if any(m in body for m in asleep):
+                  browser.close()
+                  raise SystemExit(
+                      "❌ 깨우지 못했습니다 — 30초 뒤에도 잠자기 화면입니다.\n"
+                      "   깨우기 버튼 문구가 바뀌었을 수 있습니다. 워크플로의 "
+                      "get_by_text 문자열을 실제 화면과 맞춰주세요."
+                  )
+              print("✅ 깨어 있는 상태 확인" + (" (이번 실행에서 깨움)" if woke else ""))
               browser.close()
           PY
