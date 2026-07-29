@@ -55,6 +55,8 @@ MAX_CALLS_PER_SESSION = 20
 # 함께 쌓이지만, **재배포·리부트 때 사라진다.** 영구 보존이 필요하면 secrets 에
 # LOG_WEBHOOK_URL 을 넣어 Google Sheets 등으로 함께 흘려보낸다. (README 참고)
 LOG_PATH = Path(__file__).parent / "submissions.jsonl"
+# 웹훅 전송이 실패하면 여기에 마지막 실패를 남긴다. 성공하면 지워진다.
+WEBHOOK_ERR_PATH = Path(__file__).parent / ".webhook_error"
 
 # 충전액. 발제자 패널의 예산 소진율 표시에만 쓴다. 학회원에게는 보이지 않는다.
 BUDGET_USD = 15.0
@@ -390,8 +392,18 @@ def log_submission(
                 method="POST",
             )
             urllib.request.urlopen(req, timeout=5).close()
-        except Exception:  # noqa: BLE001 - 기록 실패가 채점을 막아서는 안 된다
-            pass
+            WEBHOOK_ERR_PATH.unlink(missing_ok=True)  # 성공했으니 지난 실패 표시를 지운다
+        except Exception as e:  # noqa: BLE001 - 기록 실패가 채점을 막아서는 안 된다
+            # 채점은 계속하되 실패를 남긴다. 이게 없으면 발제자 패널이 "설정됨"이라고만
+            # 알려주고 실제로는 한 건도 안 쌓이는 상태를 눈치챌 수 없다.
+            try:
+                WEBHOOK_ERR_PATH.write_text(
+                    f"{datetime.now().isoformat(timespec='seconds')}\t"
+                    f"{type(e).__name__}: {e}",
+                    encoding="utf-8",
+                )
+            except OSError:
+                pass
 
 
 def _log_fields(rows: list[dict]) -> list[str]:
@@ -656,8 +668,18 @@ if st.session_state.admin_ok:
         )
         st.dataframe(rows, width="stretch", hide_index=True)
         st.caption("셀을 클릭하면 전체 내용이 펼쳐집니다.")
-    st.warning(
-        "이 파일은 **재배포·리부트 때 사라집니다.** 영구 보존이 필요하면 "
-        "`LOG_WEBHOOK_URL` 시크릿을 설정하세요 (README 참고). "
-        + ("현재 설정됨 ✅" if st.secrets.get("LOG_WEBHOOK_URL") else "현재 설정 안 됨 ⚠️")
-    )
+    # 웹훅 상태. "설정됨"만 보여주면 403 으로 조용히 실패하는 상태를 눈치챌 수 없다.
+    if not st.secrets.get("LOG_WEBHOOK_URL"):
+        st.warning(
+            "**웹훅이 설정되지 않았습니다.** 위 로그는 앱이 잠들거나 재배포되면 사라집니다. "
+            "`LOG_WEBHOOK_URL` 시크릿을 설정하세요 (README 참고). "
+            "그때까지는 CSV 를 주기적으로 내려받아 두세요."
+        )
+    elif WEBHOOK_ERR_PATH.exists():
+        st.error(
+            "**웹훅 전송이 실패하고 있습니다.** 제출물이 외부에 저장되지 않고 있습니다.\n\n"
+            f"마지막 실패: `{WEBHOOK_ERR_PATH.read_text(encoding='utf-8')[:200]}`\n\n"
+            "403 이면 Apps Script 배포의 액세스 권한이 **모든 사용자**인지 확인하세요."
+        )
+    else:
+        st.success("**웹훅 정상.** 제출물이 외부에도 저장되고 있어 재배포돼도 남습니다.")
