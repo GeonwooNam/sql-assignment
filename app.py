@@ -684,10 +684,14 @@ if st.session_state.admin_ok:
         st.caption("셀을 클릭하면 전체 내용이 펼쳐집니다.")
     # 웹훅 상태. "설정됨"만 보여주면 403 으로 조용히 실패하는 상태를 눈치챌 수 없다.
     if not st.secrets.get("LOG_WEBHOOK_URL"):
-        st.warning(
-            "**웹훅이 설정되지 않았습니다.** 위 로그는 앱이 잠들거나 재배포되면 사라집니다. "
-            "`LOG_WEBHOOK_URL` 시크릿을 설정하세요 (README 참고). "
-            "그때까지는 CSV 를 주기적으로 내려받아 두세요."
+        st.info(
+            "**이 로그는 앱 안에만 있습니다.** 코드만 바꿔 푸시하는 경우(핫 리로드)에는 "
+            "살아남지만, 아래 상황에서는 컨테이너가 새로 만들어지면서 사라집니다.\n\n"
+            "- `requirements.txt` 변경 · 수동 Reboot\n"
+            "- 12시간 이상 방치되어 잠들었다 깨어날 때 (keep-awake 워크플로가 막고 있음)\n"
+            "- 플랫폼 자체 재시작\n\n"
+            "**가끔 CSV 를 내려받아 두세요.** 위 상황이 예상되면 그 전에 먼저 받으시고요. "
+            "자동으로 남기고 싶으면 `LOG_WEBHOOK_URL` 을 설정하면 됩니다 (README 참고)."
         )
     elif WEBHOOK_ERR_PATH.exists():
         st.error(
